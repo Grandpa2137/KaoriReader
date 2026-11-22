@@ -71,6 +71,8 @@ fun MemoryScreen(
     var msg by remember { mutableStateOf<String?>(null) }
     var confirmWipe by remember { mutableStateOf(false) }
 
+    androidx.activity.compose.BackHandler { onClose() }
+
     val facts = remember(rev, persona.id) { MemoryStore.facts(ctx, persona.id) }
     val threads = remember(rev, persona.id) { MemoryStore.threads(ctx, persona.id) }
     val episodes = remember(rev, persona.id) { MemoryStore.episodes(ctx, persona.id) }

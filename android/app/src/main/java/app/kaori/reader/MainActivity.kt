@@ -113,6 +113,16 @@ private fun KaoriApp() {
     val persona = remember(personaTick) { PersonaStore.active(ctx) }
     val llm = LlmConfig(settings.baseUrl, settings.model)
 
+    // Systemowy „wstecz” musi cofać w aplikacji, a nie minimalizować ją.
+    androidx.activity.compose.BackHandler(enabled = !showPersonas && !showMemory && inReader) {
+        inReader = false
+    }
+    androidx.activity.compose.BackHandler(
+        enabled = !showPersonas && !showMemory && !inReader && tab != 0
+    ) {
+        tab = 0
+    }
+
     /**
      * Tekst, który Kaori wolno znać: tylko to, co użytkownik NAPRAWDĘ przeczytał.
      *
@@ -846,12 +856,12 @@ private fun StatsScreen() {
             if (streak > 0) "🔥" else "",
             p,
         )
-        StatRow("Łącznie", "$totalPages stron · $totalMinutes min", "", p)
+        StatRow("Total", "$totalPages pages · $totalMinutes min", "", p)
 
         Spacer(Modifier.height(20.dp))
-        Text("Z KAORI", color = p.textDim, fontSize = 10.sp, letterSpacing = 1.4.sp)
+        Text("WITH KAORI", color = p.textDim, fontSize = 10.sp, letterSpacing = 1.4.sp)
         Spacer(Modifier.height(4.dp))
-        StatRow("Czat", "separate thread + one per book", "", p)
+        StatRow("Chat", "separate thread + one per book", "", p)
         StatRow("Memory", "local, on this phone only", "", p)
     }
 }

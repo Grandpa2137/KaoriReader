@@ -66,6 +66,12 @@ fun PersonaScreen(
     var activeId by remember { mutableStateOf(PersonaStore.activeId(ctx)) }
     var editing by remember { mutableStateOf<Persona?>(null) }
 
+    // Systemowy „wstecz”: edytor → lista, lista → Ustawienia. Bez tego Android
+    // minimalizował całą aplikację i wyglądało to jak zawieszenie.
+    androidx.activity.compose.BackHandler {
+        if (editing != null) editing = null else onClose()
+    }
+
     fun reload() {
         all = PersonaStore.load(ctx)
         activeId = PersonaStore.activeId(ctx)
@@ -172,7 +178,7 @@ fun PersonaScreen(
                             // własną z tym samym szkieletem i stylem, żeby było od czego zacząć.
                             editing = Persona(
                                 id = PersonaStore.newId(),
-                                name = "Kaori (moja)",
+                                name = "Kaori (mine)",
                                 emoji = "🎀",
                                 how = "Short lines, dry humour, never explains herself too much. " +
                                     "Teases him when he is clearly joking, softens when he is tired.",

@@ -287,7 +287,7 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    if (bookTitle == null) "No to co tam" else "Ask about what you have already read.",
+                    if (bookTitle == null) "So, what's up" else "Ask about what you have already read.",
                     color = p.text, fontSize = 14.sp, fontWeight = FontWeight.Medium,
                 )
                 Spacer(Modifier.height(6.dp))
