@@ -127,7 +127,7 @@ fun LibraryScreen(
                     LibraryStore.load(ctx, m.id)?.let { b -> LibrarySearch.index(ctx, b) }
                 }
             }
-            withContext(Dispatchers.Main) { scanMsg = "szukam…" }
+            withContext(Dispatchers.Main) { scanMsg = "searching…" }
             LibrarySearch.find(ctx, needle, onProgress = { d, all ->
                 // postęp liczony co książkę; stan ustawiamy na głównym wątku
             })
@@ -201,8 +201,8 @@ fun LibraryScreen(
         ) {
             Text("Library", color = p.text, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
-            PillButton("Scan", p, filled = false, onLongClick = { onPickFolder() }) { onScanFolder() }
-            Spacer(Modifier.width(7.dp))
+            // „Scan” wymagałby dostępu do wszystkich plików — publiczna wersja go nie ma.
+            // + Add (SAF) robi to samo, bez żadnych uprawnień.
             PillButton("+ Add", p, filled = true) { onAddBook() }
         }
 
@@ -385,7 +385,7 @@ fun LibraryScreen(
                 Text("No books yet", color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Put .epub files on your phone and tap \"Scan\".",
+                    "Put .epub files anywhere on the phone, then tap + Add and pick the file or folder.",
                     color = p.textDim,
                     fontSize = 12.sp,
                     lineHeight = 18.sp,
@@ -436,7 +436,7 @@ fun LibraryScreen(
                     Spacer(Modifier.width(14.dp))
                     Column {
                         Text(
-                            "KONTYNUUJ",
+                            "CONTINUE",
                             color = p.accent,
                             fontSize = 10.sp,
                             letterSpacing = 1.4.sp,
@@ -663,7 +663,7 @@ private fun SelectionBar(
                 .padding(horizontal = 11.dp, vertical = 8.dp)
         ) { Text("✕", color = p.textDim, fontSize = 15.sp) }
         Text(
-            "$count zazn.",
+            "$count selected",
             color = p.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
         )
         Spacer(Modifier.weight(1f))
@@ -672,7 +672,7 @@ private fun SelectionBar(
                 .padding(horizontal = 8.dp, vertical = 7.dp)
         ) {
             Text(
-                if (allSelected) "odznacz" else "all",
+                if (allSelected) "clear" else "all",
                 color = p.textDim, fontSize = 10.sp,
             )
         }
@@ -1021,7 +1021,7 @@ private fun BookRow(
             Text(
                 buildString {
                     if (book.author.isNotBlank()) append("${book.author} · ")
-                    append("${book.chapterCount} rozdz.")
+                    append("${book.chapterCount} ch.")
                     if (percent > 0f) append(" · ${percent.toInt()}%")
                 },
                 color = p.textDim,

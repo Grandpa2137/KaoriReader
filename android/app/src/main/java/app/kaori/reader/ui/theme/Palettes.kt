@@ -3,8 +3,8 @@ package app.kaori.reader.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Palety Kaori Reader — źródło: D:\KaoriReader\shared\themes.json
- * (kolory wyciągnięte z D:\Kaori\Kaori Design.png i wallpaperu z sakurą)
+ * Colour palettes. Each one is checked against a real screen: reader background, plain text,
+ * the chat bubbles and the accent have to stay readable at 13 sp in bed at 2 a.m.
  */
 data class KaoriPalette(
     val id: String,

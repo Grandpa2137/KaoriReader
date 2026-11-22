@@ -6,6 +6,14 @@ to spoil the book.
 No account, no server, no telemetry. Your books, your progress and your API key stay on
 your phone.
 
+| Library | Reader |
+|---|---|
+| ![Library](docs/screens/library.png) | ![Reader](docs/screens/reader.png) |
+
+| Companion | Stats |
+|---|---|
+| ![Chat](docs/screens/chat.png) | ![Stats](docs/screens/stats.png) |
+
 ---
 
 ## What it does

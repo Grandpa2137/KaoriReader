@@ -287,7 +287,7 @@ private fun PersonaEditor(
             Text("LANGUAGE", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("auto" to "same as him", "en" to "EN", "pl" to "PL", "ja" to "日本語").forEach { (id, label) ->
+                listOf("auto" to "same as them", "en" to "EN", "pl" to "PL", "ja" to "日本語").forEach { (id, label) ->
                     Box(
                         Modifier
                             .clip(RoundedCornerShape(9.dp))
@@ -366,7 +366,7 @@ private fun PersonaEditor(
             )
 
             Spacer(Modifier.height(14.dp))
-            Text("RULES (template)", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
+            Text("RULES", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
                 value = rules,

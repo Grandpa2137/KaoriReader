@@ -78,7 +78,7 @@ fun MemoryScreen(
     val episodes = remember(rev, persona.id) { MemoryStore.episodes(ctx, persona.id) }
 
     fun fmt(ts: Long): String =
-        SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(Date(ts))
+        SimpleDateFormat("d MMM, HH:mm", Locale.ENGLISH).format(Date(ts))
 
     Column(Modifier.fillMaxSize().background(p.uiBg)) {
         Row(

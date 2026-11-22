@@ -499,7 +499,7 @@ internal fun formatStamp(ts: Long): String {
     return when {
         f.format(java.util.Date(ts)) == f.format(java.util.Date(now)) -> time
         f.format(java.util.Date(ts + 86_400_000L)) == f.format(java.util.Date(now)) -> "yesterday $time"
-        else -> java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale("pl", "PL")).format(java.util.Date(ts))
+        else -> java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale.ENGLISH).format(java.util.Date(ts))
     }
 }
 
@@ -510,7 +510,7 @@ private fun DayHeader(ts: Long, p: KaoriPalette) {
     val label = when {
         f.format(java.util.Date(ts)) == f.format(java.util.Date(now)) -> "today"
         f.format(java.util.Date(ts + 86_400_000L)) == f.format(java.util.Date(now)) -> "yesterday"
-        else -> java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale("pl", "PL")).format(java.util.Date(ts))
+        else -> java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale.ENGLISH).format(java.util.Date(ts))
     }
     Box(Modifier.fillMaxWidth().padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
         Box(

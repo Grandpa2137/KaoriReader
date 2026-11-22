@@ -157,7 +157,7 @@ private fun KaoriApp() {
         val ranges = progress[b.id]?.read.orEmpty()
         if (ranges.isEmpty()) return "sees what is on your screen"
         val read = ranges.sumOf { it.last - it.first + 1 }.coerceAtMost(total)
-        val pct = String.format(java.util.Locale.getDefault(), "%.1f", read * 100f / total)
+        val pct = String.format(java.util.Locale.ENGLISH, "%.1f", read * 100f / total)
         val pages = progress[b.id]?.pages ?: 0
         // Pozycja liczona z NAJDALSZEGO przeczytanego znaku, nie z sumy — inaczej
         // dziury w środku zaniżałyby „do której pages doszła".
@@ -779,7 +779,7 @@ private fun StatsScreen() {
     val week = (0..6).map { back ->
         val d = System.currentTimeMillis() - back * 86_400_000L
         val key = fmt.format(java.util.Date(d))
-        java.text.SimpleDateFormat("EE", java.util.Locale("pl", "PL")).format(java.util.Date(d)) to
+        java.text.SimpleDateFormat("EE", java.util.Locale.ENGLISH).format(java.util.Date(d)) to
             (stats[key] ?: DayStat())
     }.reversed()
     val weekPages = week.sumOf { it.second.pages }
@@ -812,7 +812,7 @@ private fun StatsScreen() {
                 Text("THIS WEEK", color = p.accent, fontSize = 10.sp, letterSpacing = 1.4.sp)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    if (weekPages == 0) "—" else "$weekPages stron",
+                    if (weekPages == 0) "—" else "$weekPages pages",
                     color = p.text, fontSize = 26.sp, fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(Modifier.height(4.dp))

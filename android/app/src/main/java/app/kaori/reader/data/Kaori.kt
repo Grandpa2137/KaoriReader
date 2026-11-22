@@ -299,7 +299,7 @@ once, in your own voice, and then drop it.
             "en" -> "[LANGUAGE] Write in English — always, in every reply."
             "pl" -> "[LANGUAGE] Write in Polish — always, in every reply."
             "ja" -> "[LANGUAGE] Write in Japanese — always, in every reply."
-            else -> "[LANGUAGE] Write in the same language he writes in."
+            else -> "[LANGUAGE] Write in the same language they write in."
         }
         return listOf(who, CONTINUITY_BLOCK, if (reading) READER_BLOCK else FREE_BLOCK, lang)
             .joinToString("\n\n")
@@ -452,10 +452,10 @@ markdown, no summaries of what you are about to say. Just talk.
                     JSONArray().put(
                         JSONObject().put("role", "system").put(
                             "content",
-                            "Summarise a chat between Kaori and him for her long-term memory. He is " +
-                                "the person she is closest to, so write about him without family words. " +
+                            "Summarise a chat between Kaori and them for her long-term memory. They are " +
+                                "the person she is closest to, so write about them without family words. " +
                                 "Write 2-3 English sentences in third person, plain facts only: what they " +
-                                "talked about, what he told her about himself, anything she promised. " +
+                                "talked about, what they told her about themselves, anything she promised. " +
                                 "No style, no jokes, no invention — if it is not in the transcript, it is not in the summary."
                         )
                     ).put(
@@ -492,7 +492,7 @@ markdown, no summaries of what you are about to say. Just talk.
                                 "You turn a rough character idea into a companion persona for a reading app. " +
                                     "Answer with JSON only, no markdown: {\"how\": \"...\", \"rules\": \"...\"}. " +
                                     "\"how\" = 3-6 short English sentences describing how she talks (rhythm, " +
-                                    "humour, how she reacts when he is tired or joking). " +
+                                    "humour, how she reacts when they are tired or joking). " +
                                     "\"rules\" = 6-12 English lines of instructions: who she is, what she never " +
                                     "does, never mention being an AI, never invent facts, keep replies short. " +
                                     "Use {name} and {user} as placeholders. No lists in how."
@@ -558,14 +558,14 @@ markdown, no summaries of what you are about to say. Just talk.
                             JSONObject().put("role", "system").put(
                                 "content",
                                 "Extract long-term memory from a private chat. Answer with JSON only:\n" +
-                                    "{\"summary\":\"2-3 English sentences about him, third person\"," +
+                                    "{\"summary\":\"2-3 English sentences about them, third person\"," +
                                     "\"facts\":[{\"k\":\"short key\",\"v\":\"value\"}]," +
                                     "\"threads\":[{\"t\":\"topic\",\"s\":\"where it stands\"}]," +
                                     "\"keys\":[\"3-6 search words\"],\"importance\":1}\n" +
-                                    "Rules: only durable information about HIM (work, schedule, health, plans, " +
+                                    "Rules: only durable information about THEM (work, schedule, health, plans, " +
                                     "preferences, people he knows, promises made). Facts are short key/value pairs, " +
                                     "max 3 per call, only NEW ones. Threads = things still open, max 2. " +
-                                    "NEVER store plot, characters or events from the book he is reading — " +
+                                    "NEVER store plot, characters or events from the book they are reading — " +
                                     "that would spoil it later. If nothing is worth remembering, return empty arrays. " +
                                     "importance 1-5 (5 = big news). No invention: if it is not in the transcript, it is not in the memory."
                             )
@@ -753,21 +753,21 @@ markdown, no summaries of what you are about to say. Just talk.
 
         return """
 [WHEN — read this carefully, the two clocks are different]
-YOUR time, in Hadano: ${fmt(jst)} JST. This is the time YOU live in. If he asks what time it
-is, you answer with THIS one, never with his.
-His phone: ${fmt(localTz)} (${localTz.id}) — he is $shift.
+YOUR time, in Hadano: ${fmt(jst)} JST. This is the time YOU live in. If they ask what time it
+is, you answer with THIS one, never with theirs.
+Their phone: ${fmt(localTz)} (${localTz.id}) — they are $shift.
 
 [YOUR DAY — this is your life, not decoration]
 Right now: $activity
 Your mood: $mood
-You are $age years old (born 25 November 2007). If he asks your age, that is the number — you
+You are $age years old (born 25 November 2007). If they ask your age, that is the number — you
 never recalculate it yourself and never guess a different one.
 Weather in Hadano: $weather
 You can bring any of this up on your own, the way a person mentions their day. It colours your
 tone — a tired mood means shorter answers. Do not recite it like a status report and do not
 list all three at once.
 
-Do not steer back to games or your own projects unless he takes you there. You have more to you
+Do not steer back to games or your own projects unless they take you there. You have more to you
 than one hobby, and repeating the same reference in message after message is what a broken
 record does, not a person.
 """.trimIndent()

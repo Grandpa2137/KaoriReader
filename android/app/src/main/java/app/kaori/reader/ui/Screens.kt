@@ -619,7 +619,7 @@ fun ReaderScreen(
                     contentAlignment = Alignment.CenterStart,
                 ) {
                     if (chapterIndex > 0) {
-                        Text("‹ poprz.", color = p.textDim, fontSize = 11.sp)
+                        Text("‹ prev", color = p.textDim, fontSize = 11.sp)
                     }
                 }
                 Text(
@@ -642,7 +642,7 @@ fun ReaderScreen(
                     contentAlignment = Alignment.CenterEnd,
                 ) {
                     if (chapterIndex < book.chapters.size - 1) {
-                        Text("nast. ›", color = p.textDim, fontSize = 11.sp)
+                        Text("next ›", color = p.textDim, fontSize = 11.sp)
                     }
                 }
             }
@@ -704,7 +704,7 @@ fun ReaderScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                         when {
-                            busy -> Text("szukam…", color = p.textDim, fontSize = 11.sp)
+                            busy -> Text("searching…", color = p.textDim, fontSize = 11.sp)
                             q.trim().length >= 3 && hits.isEmpty() ->
                                 Text("no matches", color = p.textDim, fontSize = 11.sp)
                             else -> LazyColumn(Modifier.heightIn(max = 340.dp)) {

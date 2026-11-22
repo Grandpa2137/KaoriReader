@@ -21,7 +21,7 @@ fun pinAppShortcut(context: Context): Boolean {
     // miniaturę ikony aplikacji, więc dwie twarze wyglądały jak błąd.
     val shortcut = ShortcutInfoCompat.Builder(context, "kaori_reader_v5")
         .setShortLabel("KaoriReader")
-        .setLongLabel("KaoriReader — czytnik light novel")
+        .setLongLabel("KaoriReader — an EPUB reader with Kaori")
         .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_shortcut))
         .setIntent(Intent(context, MainActivity::class.java).apply { action = Intent.ACTION_MAIN })
         .build()
