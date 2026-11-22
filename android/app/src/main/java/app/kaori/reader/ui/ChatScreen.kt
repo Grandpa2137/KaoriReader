@@ -87,6 +87,8 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     var input by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    // Jednorazowa informacja „to weźmie tokeny" — pamięć zapisuje się sama co 12 wiadomości.
+    var tokenNotice by remember { mutableStateOf<String?>(null) }
     var pendingImage by remember { mutableStateOf<java.io.File?>(null) }
     var viewer by remember { mutableStateOf<String?>(null) }
     var showContext by remember { mutableStateOf(false) }
@@ -151,6 +153,8 @@ fun ChatScreen(
             // Co 12 wiadomości zapisujemy do pamięci STRESZCZENIE, a dodatkowo
             // FAKTY i WĄTKI — bez nich nie pamięta grafiku ani pracy.
             if (messages.size % 12 == 0) {
+                val est = KaoriEngine.estimateTokens(messages.joinToString("\n") { it.content })
+                tokenNotice = "memory update · about $est tokens on your key"
                 val extract = KaoriEngine.extractMemory(apiKey, config, persona.name, messages.toList())
                 extract.onSuccess { e ->
                     withContext(Dispatchers.IO) {
@@ -282,6 +286,24 @@ fun ChatScreen(
                 ) {
                     Text("API key", color = p.accent, fontSize = 10.sp, fontWeight = FontWeight.Medium)
                 }
+            }
+        }
+
+        // Pamięć zapisuje się bez pytania — więc przynajmniej mówimy, ile to kosztuje.
+        tokenNotice?.let { note ->
+            androidx.compose.runtime.LaunchedEffect(note) {
+                kotlinx.coroutines.delay(9000)
+                tokenNotice = null
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(p.accent.copy(alpha = 0.12f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Text(note, color = p.accent, fontSize = 9.5.sp)
             }
         }
 

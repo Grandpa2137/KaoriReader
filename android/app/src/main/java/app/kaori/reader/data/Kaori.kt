@@ -471,41 +471,86 @@ markdown, no summaries of what you are about to say. Just talk.
     }
 
     /**
+     * Gruby szacunek kosztu: ASCII to ~4 znaki na token, pismo CJK macha prawie 1:1.
+     * Nie jest to licznik dostawcy, ale wystarcza, żeby powiedzieć użytkownikowi
+     * „to weźmie mniej więcej tyle", zanim wyda pieniądze.
+     */
+    fun estimateTokens(text: String): Int {
+        var ascii = 0
+        var wide = 0
+        for (ch in text) if (ch.code < 128) ascii++ else wide++
+        return ascii / 4 + wide + 1
+    }
+
+    /** Dzieli tekst na kawałki po akapitach; każdy <= ~6000 znaków. */
+    private fun chunks(text: String, limit: Int = 6000): List<String> {
+        val out = ArrayList<String>()
+        val sb = StringBuilder()
+        for (para in text.split("\n\n")) {
+            if (sb.isNotEmpty() && sb.length + para.length + 2 > limit) {
+                out.add(sb.toString())
+                sb.setLength(0)
+            }
+            if (para.length > limit) {
+                // pojedynczy moloch: tniemy po zdaniach, a jak i to nie wyjdzie — na twardo
+                var rest = para
+                while (rest.length > limit) {
+                    var cut = rest.lastIndexOf('.', limit)
+                    if (cut < limit / 2) cut = limit
+                    out.add(rest.substring(0, cut + 1).trim())
+                    rest = rest.substring(cut + 1)
+                }
+                if (rest.isNotBlank()) sb.append(rest).append("\n\n")
+                continue
+            }
+            if (sb.isNotEmpty()) sb.append("\n\n")
+            sb.append(para)
+        }
+        if (sb.isNotBlank()) out.add(sb.toString())
+        return out.ifEmpty { listOf(text) }
+    }
+
+    /**
      * Tłumaczenie kawałka tekstu — osobne wywołanie, bez persony i bez pamięci.
-     * Zwraca sam przekład, żeby dało się go skopiować albo przeczytać obok oryginału.
+     * Długi tekst (cały rozdział) idzie kawałkami, a postęp leci do wywołującego.
      */
     suspend fun translate(
         apiKey: String,
         config: LlmConfig,
         text: String,
         target: String,
+        onProgress: ((done: Int, total: Int) -> Unit)? = null,
     ): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             if (apiKey.isBlank()) error("Add your API key in Settings first.")
-            val body = JSONObject()
-                .put("model", config.model)
-                .put(
-                    "messages",
-                    JSONArray()
-                        .put(
-                            JSONObject().put("role", "system").put(
-                                "content",
-                                "You are a translation engine. Translate the user's text into $target. " +
-                                    "Output ONLY the translation: no notes, no quotes around it, no " +
-                                    "explanation, no original text. Keep paragraph breaks and keep names, " +
-                                    "honorifics and sound effects the way the original uses them. If a " +
-                                    "word is unreadable or you are unsure, translate it the way the " +
-                                    "surrounding sentence implies instead of guessing wildly."
-                            )
-                        )
-                        .put(JSONObject().put("role", "user").put("content", text.take(9000)))
-                )
-                .put("temperature", 0.2)
-                .put("max_tokens", 3000)
-                .put("thinking", JSONObject().put("type", "disabled"))
-            val out = post(config, apiKey, body.toString())
-            if (out.startsWith("Error") || out.startsWith("Can't")) error(out)
-            out.trim()
+            val system =
+                "You are a translation engine. Translate the user's text into $target. " +
+                    "Output ONLY the translation: no notes, no quotes around it, no " +
+                    "explanation, no original text. Keep paragraph breaks and keep names, " +
+                    "honorifics and sound effects the way the original uses them. If a " +
+                    "word is unreadable or you are unsure, translate it the way the " +
+                    "surrounding sentence implies instead of guessing wildly."
+            val parts = chunks(text)
+            val done = StringBuilder()
+            parts.forEachIndexed { i, part ->
+                val body = JSONObject()
+                    .put("model", config.model)
+                    .put(
+                        "messages",
+                        JSONArray()
+                            .put(JSONObject().put("role", "system").put("content", system))
+                            .put(JSONObject().put("role", "user").put("content", part))
+                    )
+                    .put("temperature", 0.2)
+                    .put("max_tokens", 4000)
+                    .put("thinking", JSONObject().put("type", "disabled"))
+                val out = post(config, apiKey, body.toString())
+                if (out.startsWith("Error") || out.startsWith("Can't")) error(out)
+                if (done.isNotEmpty()) done.append("\n\n")
+                done.append(out.trim())
+                onProgress?.invoke(i + 1, parts.size)
+            }
+            done.toString()
         }
     }
 

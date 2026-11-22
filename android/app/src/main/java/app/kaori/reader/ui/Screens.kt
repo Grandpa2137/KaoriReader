@@ -157,6 +157,10 @@ fun ReaderScreen(
     var translateErr by remember { mutableStateOf<String?>(null) }
     var translateTo by remember { mutableStateOf("Polish") }
     var translateFrom by remember { mutableStateOf("") }
+    // Co tłumaczymy: widoczną stronę czy cały rozdział (ten drugi to kilka wywołań).
+    var translateWholeChapter by remember { mutableStateOf(false) }
+    var translateStep by remember { mutableStateOf(0) }
+    var translateTotal by remember { mutableStateOf(0) }
     // Reading na głos — systemowy syntezator, strona po stronie.
     val tts = remember { app.kaori.reader.data.TtsPlayer(ctx) }
     var speaking by remember { mutableStateOf(false) }
@@ -879,20 +883,49 @@ fun ReaderScreen(
 
         // --- tłumaczenie widocznego tekstu ---
         if (showTranslate) {
-            val source = if (scrollMode) {
-                chapter?.text.orEmpty()
-            } else {
-                chapterPages?.getOrNull(safePage)?.text.orEmpty()
+            val pageText = chapterPages?.getOrNull(safePage)?.text.orEmpty()
+            val source = when {
+                translateWholeChapter -> chapter?.text.orEmpty()
+                scrollMode -> chapter?.text.orEmpty()
+                else -> pageText
             }
+            val estTokens = app.kaori.reader.data.KaoriEngine.estimateTokens(source)
+            val estOut = (estTokens / 2).coerceAtLeast(1)
             AlertDialog(
                 onDismissRequest = { showTranslate = false },
                 containerColor = p.uiBg,
-                title = { Text("Translate this page", fontSize = 15.sp) },
+                title = { Text("Translate", fontSize = 15.sp) },
                 text = {
                     Column {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(false to "this page", true to "whole chapter").forEach { (whole, label) ->
+                                Box(
+                                    Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (translateWholeChapter == whole) p.accent.copy(alpha = 0.18f)
+                                            else p.uiSurface
+                                        )
+                                        .clickable {
+                                            translateWholeChapter = whole
+                                            translated = null
+                                            translateErr = null
+                                        }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        label,
+                                        color = if (translateWholeChapter == whole) p.accent else p.textMuted,
+                                        fontSize = 10.sp,
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
                         Text(
-                            if (source.isBlank()) "Nothing to translate on this page."
-                            else "${source.length} characters from this page.",
+                            if (source.isBlank()) "Nothing to translate here."
+                            else "${source.length} characters · about $estTokens tokens in, " +
+                                "up to $estOut out — charged by your own API provider.",
                             color = p.textDim,
                             fontSize = 9.5.sp,
                         )
@@ -928,7 +961,12 @@ fun ReaderScreen(
                                     .padding(11.dp)
                             ) {
                                 when {
-                                    translateBusy -> Text("translating…", color = p.textDim, fontSize = 11.sp)
+                                    translateBusy -> Text(
+                                        if (translateTotal > 1) "translating $translateStep / $translateTotal…"
+                                        else "translating…",
+                                        color = p.textDim,
+                                        fontSize = 11.sp,
+                                    )
                                     translateErr != null -> Text(
                                         translateErr!!,
                                         color = androidx.compose.ui.graphics.Color(0xFFE08A9A),
@@ -962,19 +1000,33 @@ fun ReaderScreen(
                             translateErr = null
                             translated = null
                             translateFrom = source
+                            translateStep = 0
+                            translateTotal = 0
                             scope.launch {
                                 val res = app.kaori.reader.data.KaoriEngine.translate(
                                     apiKey = apiKey,
                                     config = config,
                                     text = source,
                                     target = translateTo,
+                                    onProgress = { d, t ->
+                                        translateStep = d
+                                        translateTotal = t
+                                    },
                                 )
                                 res.onSuccess { translated = it }
                                     .onFailure { translateErr = it.message ?: "couldn't translate" }
                                 translateBusy = false
                             }
                         }
-                    ) { Text(if (translateBusy) "…" else "Translate") }
+                    ) {
+                        Text(
+                            when {
+                                translateBusy -> "…"
+                                estTokens > 0 -> "Translate (≈$estTokens tok)"
+                                else -> "Translate"
+                            }
+                        )
+                    }
                 },
             )
         }
