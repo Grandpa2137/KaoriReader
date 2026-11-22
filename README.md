@@ -144,12 +144,13 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite covers the parts that must not break: `ReadRanges` (the spoiler guard — ranges,
-merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
+The suite (39 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
+ranges, merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
 chapter splitting, so a long chapter is never cut in half), and the data layer —
 `AtomicJson` (temp file + rename, `.bak` of the previous version), `ProgressStore`
-(corrupt JSON is set aside instead of being overwritten with an empty map) and
-`TranslationStore` (cache keys, no leaking between books).
+(corrupt JSON is set aside instead of being overwritten with an empty map),
+`TranslationStore` (cache keys, no leaking between books) and `Backup.readRanges`
+(what a restored backup is allowed to mark as read).
 
 ---
 
