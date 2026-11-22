@@ -50,7 +50,10 @@ your phone.
   tells you **how many tokens it will cost** before you spend anything. The result opens on its
   own full screen in your reading font, with copy to clipboard and **19 languages** to pick from.
   Translations are **cached on the device**: the same text and language never costs twice, the
-  header says `saved, 0 tokens`, and Settings shows how much space they take (with a Clear button)
+  header says `saved, 0 tokens`, and Settings shows how much space they take (with a Clear button).
+  Tap **Read** and the translated chapter opens in the reader as its own document — real pagination,
+  chapter title, page counter and TTS — while the original book is left completely untouched;
+  the back arrow returns you to where you were in the original
 - **her language** — chips in the chat (auto / EN / PL / JA) change the language she answers in,
   for this conversation only, without touching the persona
 - strict in-character mode: no "as an AI", no meta-commentary, no lists

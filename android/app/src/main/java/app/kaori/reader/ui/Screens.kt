@@ -121,6 +121,8 @@ fun ReaderScreen(
     /** „Przeczytane do tego miejsca" / „od tego miejsca nieprzeczytane" (offset w książce). */
     onMarkReadUpTo: (Int) -> Unit = {},
     onMarkUnreadFrom: (Int) -> Unit = {},
+    /** Otwarcie przetłumaczonego rozdziału jako osobnego dokumentu (oryginał zostaje). */
+    onReadTranslated: (lang: String, text: String, chapterIndex: Int) -> Unit = { _, _, _ -> },
 ) {
     val p = LocalPalette.current
     val chapter = book.chapters.getOrNull(chapterIndex)
@@ -1196,8 +1198,24 @@ fun ReaderScreen(
                             )
                         }
                         Text(
-                            "Copy",
+                            "Read",
                             color = p.accent,
+                            fontSize = 11.sp,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(p.accent.copy(alpha = 0.20f))
+                                .clickable(enabled = translated != null) {
+                                    onReadTranslated(translateTo, translated.orEmpty(), chapterIndex)
+                                    translated = null
+                                    translateErr = null
+                                    translateBusy = false
+                                }
+                                .padding(horizontal = 12.dp, vertical = 7.dp),
+                        )
+                        Spacer(Modifier.width(7.dp))
+                        Text(
+                            "Copy",
+                            color = p.textMuted,
                             fontSize = 11.sp,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))

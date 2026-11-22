@@ -106,6 +106,8 @@ private fun KaoriApp() {
     val scrollSaveAt = remember { mutableMapOf<String, Long>() }
     // Skok z wyszukiwania w bibliotece — trafienie ma się otworzyć dokładnie tam.
     var pendingSeek by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
+    // Przetłumaczony rozdział czytany jako osobny dokument — oryginał zostaje nietknięty.
+    var translatedReturn by remember { mutableStateOf<Triple<Book, Int, Int>?>(null) }
     // Postacie: lista + edytor jako osobny ekran.
     var showPersonas by remember { mutableStateOf(false) }
     var showMemory by remember { mutableStateOf(false) }
@@ -113,9 +115,21 @@ private fun KaoriApp() {
     val persona = remember(personaTick) { PersonaStore.active(ctx) }
     val llm = LlmConfig(settings.baseUrl, settings.model)
 
+    // Wyjście z czytnika: jeśli czytamy przetłumaczony rozdział, wracamy do oryginału.
+    val closeReader: () -> Unit = {
+        val back = translatedReturn
+        if (back != null) {
+            current = back.first
+            chapter = back.second
+            translatedReturn = null
+        } else {
+            inReader = false
+        }
+    }
+
     // Systemowy „wstecz” musi cofać w aplikacji, a nie minimalizować ją.
     androidx.activity.compose.BackHandler(enabled = !showPersonas && !showMemory && inReader) {
-        inReader = false
+        closeReader()
     }
     androidx.activity.compose.BackHandler(
         enabled = !showPersonas && !showMemory && !inReader && tab != 0
@@ -467,7 +481,7 @@ private fun KaoriApp() {
                         scrollMode = settings.scrollMode,
                         onScrollMode = { scope.launch { store.setScrollMode(it) } },
                         onChapter = { chapter = it },
-                        onBack = { inReader = false },
+                        onBack = closeReader,
                         apiKey = settings.apiKey,
                         config = llm,
                         onMarkReadUpTo = { upto ->
@@ -486,6 +500,21 @@ private fun KaoriApp() {
                                 )
                                 progress = progress + (b.id to entry)
                                 scope.launch(Dispatchers.IO) { ProgressStore.save(ctx, b.id, entry) }
+                            }
+                        },
+                        onReadTranslated = { lang, text, chIdx ->
+                            val origin = current
+                            if (origin != null && text.isNotBlank()) {
+                                translatedReturn = Triple(origin, chIdx, chapter)
+                                val title = origin.chapters.getOrNull(chIdx)?.title ?: "chapter"
+                                current = Book(
+                                    id = origin.id + "#tr:" + lang.lowercase() + ":" + chIdx,
+                                    title = origin.title + " · " + lang,
+                                    author = origin.author,
+                                    chapters = listOf(app.kaori.reader.data.Chapter(title, text)),
+                                )
+                                chapter = 0
+                                inReader = true
                             }
                         },
                         onMarkUnreadFrom = { from ->
