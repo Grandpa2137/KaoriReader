@@ -513,7 +513,8 @@ markdown, no summaries of what you are about to say. Just talk.
                     "explanation, no original text. Keep paragraph breaks and keep names, " +
                     "honorifics and sound effects the way the original uses them. If a " +
                     "word is unreadable or you are unsure, translate it the way the " +
-                    "surrounding sentence implies instead of guessing wildly."
+                    "surrounding sentence implies instead of guessing wildly. Numbers, dates and " +
+                    "measurements keep the same value and stay as digits when the original used digits."
             val parts = chunks(text)
             val done = StringBuilder()
             parts.forEachIndexed { i, part ->
