@@ -1,4 +1,4 @@
-# Kaori Reader
+﻿# KaoriReader
 
 An Android EPUB reader with a companion who reads **with** you — and who is not allowed
 to spoil the book.
