@@ -19,7 +19,7 @@ COMPANION (bring your own key)
 - PERSONAS: Kaori, or duplicate her card and rewrite it, or describe your own character and let the model fill in how she talks and what she refuses to do
 - LOOKS THINGS UP: paste a URL into the chat and she fetches that page and reads it, including data hidden in the page's script JSON
 - SEES PICTURES: attach a photo to a message, and illustrations from the part of the book you have already read go with the text, so she comments on the image itself
-- TRANSLATES A PAGE OR A WHOLE CHAPTER: one tap in the reader sends the text you are looking at to the model, chunks long chapters so nothing gets cut off, shows the translation with copy to clipboard, and tells you roughly how many tokens it will cost before you spend anything
+- TRANSLATES A PAGE OR A WHOLE CHAPTER: one tap in the reader sends the text you are looking at to the model, chunks long chapters so nothing gets cut off, shows the translation on its own full screen in your reading font (copy to clipboard), and tells you roughly how many tokens it will cost before you spend anything. Pick from 19 target languages, and change it right there to see the same text in another one
 - HER LANGUAGE: chips in the chat (auto / EN / PL / JA) change her answer language for this conversation only`n- in-character mode: no "as an AI", no meta commentary, no bullet lists
 
 READING MARKS

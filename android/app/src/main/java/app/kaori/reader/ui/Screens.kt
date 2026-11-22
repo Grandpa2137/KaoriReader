@@ -86,6 +86,13 @@ import kotlinx.coroutines.withContext
 // --------------------------------------------------------------------------- //
 //  CZYTNIK
 // --------------------------------------------------------------------------- //
+/** Języki do tłumaczenia — lista, nie trzy chipy, bo ludzie czytają nie tylko po polsku. */
+private val TRANSLATE_LANGS = listOf(
+    "Polish", "English", "Japanese", "German", "French", "Spanish", "Italian", "Portuguese",
+    "Russian", "Ukrainian", "Czech", "Dutch", "Swedish", "Turkish", "Chinese", "Korean",
+    "Vietnamese", "Indonesian", "Thai",
+)
+
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
@@ -168,6 +175,8 @@ fun ReaderScreen(
     var translateTotal by remember { mutableStateOf(0) }
     // Ręczne znaczniki: czytanie na dwóch urządzeniach albo powrót po roku.
     var showMarks by remember { mutableStateOf(false) }
+    // Wybór języka docelowego — lista, nie trzy stałe chipy.
+    var showLangPicker by remember { mutableStateOf(false) }
     // Reading na głos — systemowy syntezator, strona po stronie.
     val tts = remember { app.kaori.reader.data.TtsPlayer(ctx) }
     var speaking by remember { mutableStateOf(false) }
@@ -945,7 +954,7 @@ fun ReaderScreen(
             )
         }
 
-        // --- tłumaczenie widocznego tekstu ---
+        // --- tłumaczenie: ustawienia przed wysłaniem ---
         if (showTranslate) {
             val pageText = chapterPages?.getOrNull(safePage)?.text.orEmpty()
             val source = when {
@@ -972,7 +981,6 @@ fun ReaderScreen(
                                         )
                                         .clickable {
                                             translateWholeChapter = whole
-                                            translated = null
                                             translateErr = null
                                         }
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -985,81 +993,38 @@ fun ReaderScreen(
                                 }
                             }
                         }
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(10.dp))
+                        Text("INTO", color = p.textDim, fontSize = 8.5.sp, letterSpacing = 1.sp)
+                        Spacer(Modifier.height(5.dp))
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(p.uiSurface)
+                                .clickable { showLangPicker = true }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(translateTo, color = p.text, fontSize = 12.sp)
+                            Spacer(Modifier.weight(1f))
+                            Text("change ▾", color = p.accent, fontSize = 10.sp)
+                        }
+                        Spacer(Modifier.height(10.dp))
                         Text(
                             if (source.isBlank()) "Nothing to translate here."
                             else "${source.length} characters · about $estTokens tokens in, " +
                                 "up to $estOut out — charged by your own API provider.",
                             color = p.textDim,
                             fontSize = 9.5.sp,
+                            lineHeight = 14.sp,
                         )
-                        Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf("Polish", "English", "Japanese").forEach { lang ->
-                                Box(
-                                    Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (translateTo == lang) p.accent.copy(alpha = 0.18f)
-                                            else p.uiSurface
-                                        )
-                                        .clickable { translateTo = lang; translated = null }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                                ) {
-                                    Text(
-                                        lang,
-                                        color = if (translateTo == lang) p.accent else p.textMuted,
-                                        fontSize = 10.sp,
-                                    )
-                                }
-                            }
-                        }
-                        if (translated != null || translateBusy || translateErr != null) {
-                            Spacer(Modifier.height(10.dp))
-                            Box(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 380.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(p.uiSurface)
-                                    .padding(11.dp)
-                            ) {
-                                when {
-                                    translateBusy -> Text(
-                                        if (translateTotal > 1) "translating $translateStep / $translateTotal…"
-                                        else "translating…",
-                                        color = p.textDim,
-                                        fontSize = 11.sp,
-                                    )
-                                    translateErr != null -> Text(
-                                        translateErr!!,
-                                        color = androidx.compose.ui.graphics.Color(0xFFE08A9A),
-                                        fontSize = 11.sp,
-                                    )
-                                    else -> Column(Modifier.verticalScroll(rememberScrollState())) {
-                                        Text(translated!!, color = p.text, fontSize = 12.sp, lineHeight = 18.sp)
-                                    }
-                                }
-                            }
-                        }
                     }
                 },
                 confirmButton = {
-                    val ctxCopy = ctx
-                    val text = translated
                     TextButton(
-                        enabled = text != null,
+                        enabled = source.isNotBlank(),
                         onClick = {
-                            val cm = ctxCopy.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
-                                as android.content.ClipboardManager
-                            cm.setPrimaryClip(android.content.ClipData.newPlainText("translation", text))
-                        }
-                    ) { Text("Copy") }
-                },
-                dismissButton = {
-                    TextButton(
-                        enabled = !translateBusy && source.isNotBlank(),
-                        onClick = {
+                            showTranslate = false
                             translateBusy = true
                             translateErr = null
                             translated = null
@@ -1085,14 +1050,178 @@ fun ReaderScreen(
                     ) {
                         Text(
                             when {
-                                translateBusy -> "…"
                                 estTokens > 0 -> "Translate (≈$estTokens tok)"
                                 else -> "Translate"
                             }
                         )
                     }
                 },
+                dismissButton = {
+                    TextButton(onClick = { showTranslate = false }) { Text("Cancel") }
+                },
             )
+        }
+
+        // --- wybór języka ---
+        if (showLangPicker) {
+            AlertDialog(
+                onDismissRequest = { showLangPicker = false },
+                containerColor = p.uiBg,
+                title = { Text("Translate into", fontSize = 15.sp) },
+                text = {
+                    Column(Modifier.heightIn(max = 430.dp).verticalScroll(rememberScrollState())) {
+                        TRANSLATE_LANGS.forEach { lang ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(9.dp))
+                                    .background(
+                                        if (translateTo == lang) p.accent.copy(alpha = 0.16f)
+                                        else Color.Transparent
+                                    )
+                                    .clickable {
+                                        val changed = lang != translateTo
+                                        translateTo = lang
+                                        showLangPicker = false
+                                        // Zmiana języka na ekranie wyniku = nowe tłumaczenie od razu.
+                                        if (changed && translateFrom.isNotBlank()) {
+                                            translated = null
+                                            translateErr = null
+                                            translateBusy = true
+                                            translateStep = 0
+                                            translateTotal = 0
+                                            scope.launch {
+                                                val res = app.kaori.reader.data.KaoriEngine.translate(
+                                                    apiKey = apiKey,
+                                                    config = config,
+                                                    text = translateFrom,
+                                                    target = lang,
+                                                    onProgress = { d, t ->
+                                                        translateStep = d
+                                                        translateTotal = t
+                                                    },
+                                                )
+                                                res.onSuccess { translated = it }
+                                                    .onFailure { translateErr = it.message ?: "couldn't translate" }
+                                                translateBusy = false
+                                            }
+                                        }
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 9.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(lang, color = p.text, fontSize = 12.sp)
+                                Spacer(Modifier.weight(1f))
+                                if (translateTo == lang) Text("✓", color = p.accent, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showLangPicker = false }) { Text("Close") }
+                },
+            )
+        }
+
+        // --- wynik tłumaczenia: własny, pełny ekran (czytanie długiego rozdziału) ---
+        if (translated != null || translateBusy || translateErr != null) {
+            androidx.activity.compose.BackHandler {
+                translated = null
+                translateErr = null
+                translateBusy = false
+            }
+            Box(Modifier.fillMaxSize().background(p.readerBg)) {
+                Column(Modifier.fillMaxSize()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "✕",
+                            color = p.textMuted,
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .clickable {
+                                    translated = null
+                                    translateErr = null
+                                    translateBusy = false
+                                }
+                                .padding(6.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Translation", color = p.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                translateTo + (if (translateWholeChapter) " · whole chapter" else " · this page"),
+                                color = p.textDim,
+                                fontSize = 9.sp,
+                            )
+                        }
+                        Text(
+                            "Copy",
+                            color = p.accent,
+                            fontSize = 11.sp,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(p.accent.copy(alpha = 0.14f))
+                                .clickable {
+                                    val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                                        as android.content.ClipboardManager
+                                    cm.setPrimaryClip(
+                                        android.content.ClipData.newPlainText("translation", translated.orEmpty())
+                                    )
+                                }
+                                .padding(horizontal = 12.dp, vertical = 7.dp),
+                        )
+                        Spacer(Modifier.width(7.dp))
+                        Text(
+                            "another ▾",
+                            color = p.textMuted,
+                            fontSize = 10.sp,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { showLangPicker = true }
+                                .padding(horizontal = 9.dp, vertical = 7.dp),
+                        )
+                    }
+
+                    when {
+                        translateBusy -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                if (translateTotal > 1) "translating $translateStep / $translateTotal…"
+                                else "translating…",
+                                color = p.textDim,
+                                fontSize = 12.sp,
+                            )
+                        }
+                        translateErr != null -> Box(
+                            Modifier.fillMaxSize().padding(24.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                translateErr!!,
+                                color = androidx.compose.ui.graphics.Color(0xFFE08A9A),
+                                fontSize = 12.sp,
+                                lineHeight = 18.sp,
+                            )
+                        }
+                        else -> Column(
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 22.dp)
+                                .padding(bottom = 28.dp),
+                        ) {
+                            Text(
+                                translated!!,
+                                color = p.readerText,
+                                fontSize = (fontSize - 1f).coerceAtLeast(11f).sp,
+                                lineHeight = ((fontSize - 1f).coerceAtLeast(11f) * 1.6f).sp,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
