@@ -135,3 +135,7 @@ who was having fun rather than following a spec — that is exactly what happene
 
 The persona text of Kaori is original writing. The app ships no book content and no voice
 model, and it has no server of its own.
+
+Kaori is an original character, and the app icon is original artwork — both are covered by
+the MIT licence above, so the whole package (code, persona text, artwork) can be forked and
+redistributed under the same terms.
