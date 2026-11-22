@@ -1,0 +1,9 @@
+0.1.9
+
+- translate a page or a whole chapter into 19 languages, with a token estimate first
+- translations are cached on the device: the same text never costs twice
+- READ opens the translated chapter in the reader; the original book stays untouched
+- reading marks: long-press the title for read up to here / unread from here
+- chat language chips (auto / EN / PL / JA)
+- persona builder works without an API key
+- add books as single files or a whole folder in one tap

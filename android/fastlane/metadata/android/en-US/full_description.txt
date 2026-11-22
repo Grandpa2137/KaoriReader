@@ -1,56 +1,47 @@
 An EPUB reader with a companion who reads with you — and is not allowed to spoil the book.
 
-No account. No server. No telemetry. Your books, your reading progress and your API key stay on your phone.
+No account. No server. No telemetry. Your books, your progress and your API key stay on your phone.
 
 READER
 - EPUB 2 and EPUB 3, illustrations shown where they belong
-- two modes: pages or continuous scroll, both survive chapter changes
+- pages or continuous scroll, both survive chapter changes
 - library with collections, multi-select, and folder import (one tap for a whole library)
 - full text search inside a book and across the whole library, jumping to the exact line
-- bookmarks with exact position
+- bookmarks with exact position, plus manual "read up to here" / "unread from here" marks
 - built-in text to speech: reads a page aloud and turns the page for you
-- five themes, three fonts, text size, spoiler-safe progress tracking
-- stats: pages, this week, streak in days, minutes, and how much of it you spent with her
-- auto-collections: series are grouped by title, so a 20-volume series becomes one shelf
-- multi-select to move a dozen books into a collection or delete them at once
-- home screen shortcut from Settings
+- five themes, three fonts, text size, spoiler-safe progress
+- stats: pages, this week, streak, minutes; series are grouped into collections by title
 
 COMPANION (bring your own key)
-- works with any OpenAI-compatible endpoint: OpenAI, DeepSeek, OpenRouter, Groq, or your own URL and model
+- any OpenAI-compatible endpoint: OpenAI, DeepSeek, OpenRouter, Groq, or your own HTTPS URL
 - she sees the book you are reading, reacts to it, argues about characters
 - SPOILER GUARD: she only receives the text you have actually read. Pages you skipped are never in her context, so she cannot leak them even if the model has seen the book during training
-- LOCAL MEMORY: facts, open threads and conversation summaries, stored on the device. No vector database, no embeddings, nothing leaves the phone except the model call you made
-- PERSONAS: Kaori, or duplicate her card and rewrite it, or describe your own character and let the model fill in how she talks and what she refuses to do
-- LOOKS THINGS UP: paste a URL into the chat and she fetches that page and reads it, including data hidden in the page's script JSON
-- SEES PICTURES: attach a photo to a message, and illustrations from the part of the book you have already read go with the text, so she comments on the image itself
-- TRANSLATES A PAGE OR A WHOLE CHAPTER: one tap in the reader sends the text you are looking at to the model, chunks long chapters so nothing gets cut off, shows the translation on its own full screen in your reading font (copy to clipboard), and tells you roughly how many tokens it will cost before you spend anything. Pick from 19 target languages, and change it right there to see the same text in another one. Translations are cached on the device, so the same text never costs twice (Settings shows the size and can clear it). Tap READ and the translated chapter opens in the reader as its own document — real pagination, page counter and text to speech — and the original book stays untouched
-- HER LANGUAGE: chips in the chat (auto / EN / PL / JA) change her answer language for this conversation only`n- replies arrive in bursts, like someone typing — not one wall of text
-- every book has its own chat thread, plus a separate "just talking" one
-- the memory screen lists every fact, thread and summary, each deletable, plus one-button wipe
-- the persona builder works without an API key too (fills the fields from a template)
-- in-character mode: no "as an AI", no meta commentary, no bullet lists
+- LOCAL MEMORY: facts, open threads and summaries, on the device. No vector database, no embeddings, nothing leaves the phone except the model call you made
+- PERSONAS: Kaori, or duplicate her card and rewrite it, or describe your own character; the builder also works without an API key
+- LOOKS THINGS UP: paste a URL into the chat and she fetches that page and reads it
+- SEES PICTURES: attach a photo, and illustrations from the part you have read go with the text
+- HER LANGUAGE: chips in the chat (auto / EN / PL / JA) change her answer language for this conversation
 
-READING MARKS
-- long-press the book title in the reader: `mark read up to here` or `mark unread from here` — handy when you read the same book on another device
+TRANSLATION
+- one tap in the reader translates the page you are looking at or the whole chapter, into 19 languages
+- the app tells you roughly how many tokens it will cost before you spend anything
+- long chapters are split into chunks, so nothing gets cut off
+- results are cached on the device: the same text never costs twice, and Settings shows the size with a Clear button
+- READ opens the translated chapter in the reader as its own document (pagination, page counter, TTS) while the original book stays untouched
 
 YOUR DATA
-- export and import a backup of progress, collections, bookmarks and stats (JSON)
+- export/import a backup of progress, collections, bookmarks and stats (JSON)
 - memories are visible and deletable one by one, or wiped at once
 - API key encrypted with the Android Keystore, Android backup disabled
 
-WHAT SHE DOES NOT DO
-- she does not fetch pages you did not paste
-- she cannot read past the point where you are, by design
-- nothing is sent anywhere except the endpoint you configured (plus a keyless weather lookup for the built-in persona, cached for 30 minutes)
-
 WHAT IT DOES NOT DO
-- no cloud, no sync, no account — move phones with a JSON backup
-- no bundled model: your key, your bill, no subscription
+- no cloud, no sync, no account
+- no bundled model: your key, your bill
 - no DRM: plain EPUB 2/3 only (no PDF, MOBI, AZW3, CBZ)
-- TTS reads aloud, but there is no speech input and no voice chat
-- translation is per page or per chapter on request, not a whole-book batch job
+- no speech input, no voice chat (TTS only reads aloud)
+- translation is per page or per chapter on request, not a whole-book batch
 
 GOOD TO KNOW
 - you need your own API key; the app itself is free and open source (MIT)
-- no books are shipped with the app — it opens what you give it
-- everything runs locally; there is no KaoriReader server to shut down
+- no books are shipped with the app
+- everything runs locally; there is no KaoriReader server
