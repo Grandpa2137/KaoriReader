@@ -35,8 +35,20 @@ your phone.
 - **local memory** — facts, open threads and conversation summaries, stored on the device
   (no vector database, no embeddings, no network beyond the model call)
 - **personas** — Kaori (built in) or your own: name, emoji, language, tone, rules.
-  A description is enough; the model fills in the rest
+  A description is enough; the model fills in the rest. Or duplicate Kaori's card and rewrite
+  it — it lands in the editor as plain text, not as a locked black box
+- **she can look things up** — paste a URL into the chat and she fetches and reads that page
+  (plain HTML, or data hidden in the page's JSON), so you can ask about an article without
+  copying it by hand
+- **she can see pictures** — attach a photo to a message, and book illustrations from the part
+  you have already read are sent along with the text, so she comments on the image itself
 - strict in-character mode: no "as an AI", no meta-commentary, no lists
+- every reply is written in her voice; translation or language switching happens only when you
+  ask for it in the message
+
+> What she cannot do: fetch a page you did not paste, read the rest of the book ahead of you,
+> or send anything anywhere except your own configured endpoint — plus, for the built-in
+> persona only, a keyless Open-Meteo weather lookup (see Privacy).
 
 **Your data**
 - export/import backup of progress, collections, bookmarks and stats (JSON)
