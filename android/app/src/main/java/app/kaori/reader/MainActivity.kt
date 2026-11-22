@@ -468,6 +468,8 @@ private fun KaoriApp() {
                         onScrollMode = { scope.launch { store.setScrollMode(it) } },
                         onChapter = { chapter = it },
                         onBack = { inReader = false },
+                        apiKey = settings.apiKey,
+                        config = llm,
                         onOpenChat = {
                             chatFromReader = true
                             inReader = false

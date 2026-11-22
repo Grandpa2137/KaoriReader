@@ -106,6 +106,9 @@ fun ReaderScreen(
     initialScrollOffset: Int = 0,
     /** Skok wskazany z zewnątrz (wynik szukania w bibliotece). */
     initialSeek: Triple<Int, Int, Int>? = null,
+    /** Tłumaczenie strony: potrzebny klucz i model, ten sam co w czacie. */
+    apiKey: String = "",
+    config: app.kaori.reader.data.LlmConfig = app.kaori.reader.data.LlmConfig(),
 ) {
     val p = LocalPalette.current
     val chapter = book.chapters.getOrNull(chapterIndex)
@@ -147,6 +150,13 @@ fun ReaderScreen(
     // Okna czytnika: szukanie in text i zakładki.
     var showSearch by remember { mutableStateOf(false) }
     var showBookmarks by remember { mutableStateOf(false) }
+    // Tłumaczenie: okno z wyborem języka i wynikiem obok oryginału.
+    var showTranslate by remember { mutableStateOf(false) }
+    var translateBusy by remember { mutableStateOf(false) }
+    var translated by remember { mutableStateOf<String?>(null) }
+    var translateErr by remember { mutableStateOf<String?>(null) }
+    var translateTo by remember { mutableStateOf("Polish") }
+    var translateFrom by remember { mutableStateOf("") }
     // Reading na głos — systemowy syntezator, strona po stronie.
     val tts = remember { app.kaori.reader.data.TtsPlayer(ctx) }
     var speaking by remember { mutableStateOf(false) }
@@ -376,6 +386,14 @@ fun ReaderScreen(
                 Modifier.clip(RoundedCornerShape(8.dp)).clickable { showBookmarks = true }
                     .padding(horizontal = 6.dp, vertical = 4.dp)
             ) { Text("⚑", fontSize = 13.sp, color = p.textDim) }
+            // Tłumaczenie widocznego tekstu — bez wychodzenia z czytnika.
+            Box(
+                Modifier.clip(RoundedCornerShape(8.dp)).clickable {
+                    showTranslate = true
+                    translateErr = null
+                    translateBusy = false
+                }.padding(horizontal = 6.dp, vertical = 4.dp)
+            ) { Text("文", fontSize = 13.sp, color = p.textDim) }
             Spacer(Modifier.width(6.dp))
             Row(Modifier.clip(RoundedCornerShape(10.dp)).background(p.uiSurfaceRaised)) {
                 ModeChip("Pages", !scrollMode, p) { onScrollMode(false) }
@@ -855,6 +873,108 @@ fun ReaderScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { showBookmarks = false }) { Text("Close") }
+                },
+            )
+        }
+
+        // --- tłumaczenie widocznego tekstu ---
+        if (showTranslate) {
+            val source = if (scrollMode) {
+                chapter?.text.orEmpty()
+            } else {
+                chapterPages?.getOrNull(safePage)?.text.orEmpty()
+            }
+            AlertDialog(
+                onDismissRequest = { showTranslate = false },
+                containerColor = p.uiBg,
+                title = { Text("Translate this page", fontSize = 15.sp) },
+                text = {
+                    Column {
+                        Text(
+                            if (source.isBlank()) "Nothing to translate on this page."
+                            else "${source.length} characters from this page.",
+                            color = p.textDim,
+                            fontSize = 9.5.sp,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf("Polish", "English", "Japanese").forEach { lang ->
+                                Box(
+                                    Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (translateTo == lang) p.accent.copy(alpha = 0.18f)
+                                            else p.uiSurface
+                                        )
+                                        .clickable { translateTo = lang; translated = null }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        lang,
+                                        color = if (translateTo == lang) p.accent else p.textMuted,
+                                        fontSize = 10.sp,
+                                    )
+                                }
+                            }
+                        }
+                        if (translated != null || translateBusy || translateErr != null) {
+                            Spacer(Modifier.height(10.dp))
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 380.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(p.uiSurface)
+                                    .padding(11.dp)
+                            ) {
+                                when {
+                                    translateBusy -> Text("translating…", color = p.textDim, fontSize = 11.sp)
+                                    translateErr != null -> Text(
+                                        translateErr!!,
+                                        color = androidx.compose.ui.graphics.Color(0xFFE08A9A),
+                                        fontSize = 11.sp,
+                                    )
+                                    else -> Column(Modifier.verticalScroll(rememberScrollState())) {
+                                        Text(translated!!, color = p.text, fontSize = 12.sp, lineHeight = 18.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    val ctxCopy = ctx
+                    val text = translated
+                    TextButton(
+                        enabled = text != null,
+                        onClick = {
+                            val cm = ctxCopy.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                                as android.content.ClipboardManager
+                            cm.setPrimaryClip(android.content.ClipData.newPlainText("translation", text))
+                        }
+                    ) { Text("Copy") }
+                },
+                dismissButton = {
+                    TextButton(
+                        enabled = !translateBusy && source.isNotBlank(),
+                        onClick = {
+                            translateBusy = true
+                            translateErr = null
+                            translated = null
+                            translateFrom = source
+                            scope.launch {
+                                val res = app.kaori.reader.data.KaoriEngine.translate(
+                                    apiKey = apiKey,
+                                    config = config,
+                                    text = source,
+                                    target = translateTo,
+                                )
+                                res.onSuccess { translated = it }
+                                    .onFailure { translateErr = it.message ?: "couldn't translate" }
+                                translateBusy = false
+                            }
+                        }
+                    ) { Text(if (translateBusy) "…" else "Translate") }
                 },
             )
         }

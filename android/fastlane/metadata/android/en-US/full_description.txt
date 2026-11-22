@@ -19,6 +19,7 @@ COMPANION (bring your own key)
 - PERSONAS: Kaori, or duplicate her card and rewrite it, or describe your own character and let the model fill in how she talks and what she refuses to do
 - LOOKS THINGS UP: paste a URL into the chat and she fetches that page and reads it, including data hidden in the page's script JSON
 - SEES PICTURES: attach a photo to a message, and illustrations from the part of the book you have already read go with the text, so she comments on the image itself
+- TRANSLATES A PAGE: one tap in the reader sends the page you are looking at to the model and shows the translation next to it, with copy to clipboard
 - in-character mode: no "as an AI", no meta commentary, no bullet lists
 
 YOUR DATA

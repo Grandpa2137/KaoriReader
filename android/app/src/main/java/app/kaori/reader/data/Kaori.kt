@@ -471,6 +471,45 @@ markdown, no summaries of what you are about to say. Just talk.
     }
 
     /**
+     * Tłumaczenie kawałka tekstu — osobne wywołanie, bez persony i bez pamięci.
+     * Zwraca sam przekład, żeby dało się go skopiować albo przeczytać obok oryginału.
+     */
+    suspend fun translate(
+        apiKey: String,
+        config: LlmConfig,
+        text: String,
+        target: String,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (apiKey.isBlank()) error("Add your API key in Settings first.")
+            val body = JSONObject()
+                .put("model", config.model)
+                .put(
+                    "messages",
+                    JSONArray()
+                        .put(
+                            JSONObject().put("role", "system").put(
+                                "content",
+                                "You are a translation engine. Translate the user's text into $target. " +
+                                    "Output ONLY the translation: no notes, no quotes around it, no " +
+                                    "explanation, no original text. Keep paragraph breaks and keep names, " +
+                                    "honorifics and sound effects the way the original uses them. If a " +
+                                    "word is unreadable or you are unsure, translate it the way the " +
+                                    "surrounding sentence implies instead of guessing wildly."
+                            )
+                        )
+                        .put(JSONObject().put("role", "user").put("content", text.take(9000)))
+                )
+                .put("temperature", 0.2)
+                .put("max_tokens", 3000)
+                .put("thinking", JSONObject().put("type", "disabled"))
+            val out = post(config, apiKey, body.toString())
+            if (out.startsWith("Error") || out.startsWith("Can't")) error(out)
+            out.trim()
+        }
+    }
+
+    /**
      * Buduje własną postać z opisu użytkownika. Jedno wywołanie, ten sam klucz.
      * Zwraca (jak mówi, zasady) — użytkownik i tak może to potem poprawić.
      */

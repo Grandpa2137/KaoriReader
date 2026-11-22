@@ -42,6 +42,9 @@ your phone.
   copying it by hand
 - **she can see pictures** — attach a photo to a message, and book illustrations from the part
   you have already read are sent along with the text, so she comments on the image itself
+- **translate the page you are on** — the 文 button in the reader sends the visible page to the
+  model with a plain "translate this" instruction (no persona, no memory, no spoilers) and
+  shows the result beside it, with copy to clipboard. Pick the target language in the dialog
 - strict in-character mode: no "as an AI", no meta-commentary, no lists
 - every reply is written in her voice; translation or language switching happens only when you
   ask for it in the message
