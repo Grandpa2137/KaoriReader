@@ -361,8 +361,8 @@ markdown, no summaries of what you are about to say. Just talk.
             // Treść pages, którą właśnie podlinkował — dokładamy do OBU trybów.
             fun appendWeb(sb: StringBuilder) {
                 if (webText.isBlank()) return
-                sb.appendLine("[PAGE HE JUST LINKED]")
-                sb.appendLine("This is the real text of the page he sent you — you may rely on it.")
+                sb.appendLine("[PAGE THEY JUST LINKED]")
+                sb.appendLine("This is the real text of the page they sent you — you may rely on it.")
                 sb.appendLine("It may be cut off at the end (long pages). If a number or a stat you")
                 sb.appendLine("need is not in it, say you can't see it — do not guess.")
                 sb.appendLine(webText)
@@ -371,7 +371,7 @@ markdown, no summaries of what you are about to say. Just talk.
 
             val userMessage = if (reading) {
                 buildString {
-                    appendLine(timeContext())
+                    appendLine(timeContext(persona.builtin))
                     appendLine()
                     if (memories.isNotEmpty()) {
                         appendLine(memoryBlock(memories))
@@ -379,10 +379,10 @@ markdown, no summaries of what you are about to say. Just talk.
                     }
                     appendWeb(this)
                     if (bookImages.isNotEmpty()) {
-                        appendLine("[ILLUSTRATIONS FROM THE PART HE HAS READ]")
+                        appendLine("[ILLUSTRATIONS FROM THE PART THEY HAVE READ]")
                         appendLine("Attached at the end: ${bookImages.size} illustration(s) from this book, in reading ")
-                        appendLine("order — the last one is closest to where he is now. You can see them. Talk about ")
-                        appendLine("them the way a person next to him would: what is in the picture, who is there, ")
+                        appendLine("order — the last one is closest to where they are now. You can see them. Talk about ")
+                        appendLine("them the way a person next to them would: what is in the picture, who is there, ")
                         appendLine("what it says about the scene. Do not invent details that are not visible.")
                         appendLine()
                     }
@@ -395,7 +395,7 @@ markdown, no summaries of what you are about to say. Just talk.
                 }
             } else {
                 buildString {
-                    appendLine(timeContext())
+                    appendLine(timeContext(persona.builtin))
                     appendLine()
                     if (memories.isNotEmpty()) {
                         appendLine(memoryBlock(memories))
@@ -719,8 +719,12 @@ markdown, no summaries of what you are about to say. Just talk.
         }.getOrDefault(weatherCache)
     }
 
-    /** Data i godzina: najpierw JEJ czas (Hadano), potem czas telefonu użytkownika. */
-    private suspend fun timeContext(): String {
+    /**
+     * Data i godzina: najpierw JEJ czas (Hadano), potem czas telefonu użytkownika.
+     * Pogodę pytamy TYLKO dla wbudowanej Kaori — własna persona nie ma powodu
+     * wywoływać żadnego dodatkowego requestu.
+     */
+    private suspend fun timeContext(withWeather: Boolean): String {
         val now = Date()
         val localTz = TimeZone.getDefault()
         val jst = TimeZone.getTimeZone("Asia/Tokyo")
@@ -739,7 +743,7 @@ markdown, no summaries of what you are about to say. Just talk.
             jstCal.get(java.util.Calendar.HOUR_OF_DAY),
             jstCal.get(java.util.Calendar.DAY_OF_WEEK),
         )
-        val weather = weatherLine()
+        val weather = if (withWeather) weatherLine() else ""
 
         // Wiek liczony z kanonicznej daty urodzenia — nigdy wpisany na twardo.
         val age = run {
@@ -750,6 +754,8 @@ markdown, no summaries of what you are about to say. Just talk.
             if (m < 11 || (m == 11 && d < 25)) a -= 1
             a
         }
+
+        val weatherLine = if (weather.isNotBlank()) "Weather in Hadano: $weather\n" else ""
 
         return """
 [WHEN — read this carefully, the two clocks are different]
@@ -762,8 +768,7 @@ Right now: $activity
 Your mood: $mood
 You are $age years old (born 25 November 2007). If they ask your age, that is the number — you
 never recalculate it yourself and never guess a different one.
-Weather in Hadano: $weather
-You can bring any of this up on your own, the way a person mentions their day. It colours your
+${weatherLine}You can bring any of this up on your own, the way a person mentions their day. It colours your
 tone — a tired mood means shorter answers. Do not recite it like a status report and do not
 list all three at once.
 

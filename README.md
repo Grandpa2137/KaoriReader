@@ -109,8 +109,11 @@ of the text that was sent.
 ## Privacy
 
 - No analytics, no crash reporting, no remote config.
-- The only outbound requests are the ones you trigger: the model API you configured,
-  an optional page fetch when you paste a link, and weather for the built-in persona.
+- The only outbound requests are the ones you trigger: the model API you configured and an
+  optional page fetch when you paste a link.
+- The built-in Kaori persona also asks Open-Meteo for the weather in her town, so she can
+  mention it — one small keyless request, cached for 30 minutes. Custom personas never do
+  this.
 - Keys live in Android Keystore; backups are excluded (`allowBackup="false"`).
 
 ---
