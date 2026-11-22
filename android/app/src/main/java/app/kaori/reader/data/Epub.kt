@@ -95,7 +95,7 @@ object EpubParser {
 
             val opfDir = opfPath.substringBeforeLast('/', "")
             val opfBytes = zip.getEntry(opfPath)?.let { zip.getInputStream(it).readBytes() }
-                ?: error("Brak pliku OPF: $opfPath")
+                ?: error("Missing OPF file: $opfPath")
 
             val (manifest, spineOrder) = readOpf(opfBytes)
             val title = readMeta(opfBytes, "title").ifBlank { file.nameWithoutExtension }

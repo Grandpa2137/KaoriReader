@@ -152,7 +152,7 @@ private fun KaoriApp() {
     fun spoilerInfo(): String {
         val b = current ?: return ""
         if (b.chapters.isEmpty()) return ""
-        if (!settings.spoilerGuard) return "blokada wyłączona — widzi całą książkę"
+        if (!settings.spoilerGuard) return "guard off — she sees the whole book"
         val total = b.chapters.sumOf { it.text.length }.coerceAtLeast(1)
         val ranges = progress[b.id]?.read.orEmpty()
         if (ranges.isEmpty()) return "sees what is on your screen"

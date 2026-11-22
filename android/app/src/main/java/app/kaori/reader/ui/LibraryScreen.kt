@@ -516,7 +516,7 @@ fun LibraryScreen(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        label = { Text("Nazwa", fontSize = 11.sp) },
+                        label = { Text("Name", fontSize = 11.sp) },
                     )
                     if (editing != null) {
                         Spacer(Modifier.height(10.dp))
@@ -822,7 +822,7 @@ private fun CollectionsScreen(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        label = { Text("Nazwa", fontSize = 11.sp) },
+                        label = { Text("Name", fontSize = 11.sp) },
                     )
                     if (editing != null) {
                         Spacer(Modifier.height(10.dp))

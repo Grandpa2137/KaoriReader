@@ -80,6 +80,9 @@ fun ChatScreen(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // Wbudowana persona siedzi w assets — jeden plik, który można skopiować do edytora.
+    val personaText = remember { KaoriEngine.builtinPersonaText(ctx) }
+
     val messages = remember(threadId) { mutableStateListOf<ChatMessage>() }
     val listState = rememberLazyListState()
     var input by remember { mutableStateOf("") }
@@ -122,6 +125,7 @@ fun ChatScreen(
                 config = config,
                 persona = persona,
                 strictRole = strictRole,
+                personaText = personaText,
                 bookTitle = bookTitle,
                 visibleText = visibleText(),
                 history = history,
@@ -367,7 +371,7 @@ fun ChatScreen(
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (input.isEmpty()) {
-                    Text("napisz do ${persona.name}…", color = p.textDim, fontSize = 12.sp)
+                    Text("write to ${persona.name}…", color = p.textDim, fontSize = 12.sp)
                 }
                 BasicTextField(
                     value = input,
@@ -583,7 +587,7 @@ private fun Typing(p: KaoriPalette) {
                 .background(p.bubbleKaori)
                 .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
-            Text("Kaori pisze…", color = p.textDim, fontSize = 11.sp)
+            Text("typing…", color = p.textDim, fontSize = 11.sp)
         }
         Spacer(Modifier.weight(1f))
     }

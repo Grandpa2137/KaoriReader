@@ -174,20 +174,19 @@ fun PersonaScreen(
                         .clip(RoundedCornerShape(14.dp))
                         .background(p.uiSurface)
                         .clickable {
-                            // Kopia Kaori: edytujemy jej tekst? Nie — podmieniamy na
-                            // własną z tym samym szkieletem i stylem, żeby było od czego zacząć.
+                            // Prawdziwa kopia: cały prompt Kaori z assets trafia do pola
+                            // „rules”, więc można go skrócić, przepisać albo wyrzucić połowę.
                             editing = Persona(
                                 id = PersonaStore.newId(),
-                                name = "Kaori (mine)",
+                                name = "My Kaori",
                                 emoji = "🎀",
-                                how = "Short lines, dry humour, never explains herself too much. " +
-                                    "Teases him when he is clearly joking, softens when he is tired.",
-                                rules = PersonaStore.TEMPLATE,
+                                how = "",
+                                rules = KaoriEngine.builtinPersonaText(ctx),
                             )
                         }
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Start from Kaori", color = p.textMuted, fontSize = 12.sp) }
+                ) { Text("Duplicate Kaori", color = p.textMuted, fontSize = 12.sp) }
             }
         }
     }

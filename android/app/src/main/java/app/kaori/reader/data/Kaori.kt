@@ -283,7 +283,7 @@ once, in your own voice, and then drop it.
         val who = buildString {
             appendLine("You are ${p.name}.") 
             appendLine()
-            appendLine(PersonaStore.TEMPLATE.replace("{name}", p.name).replace("{user}", "him"))
+            appendLine(PersonaStore.TEMPLATE.replace("{name}", p.name).replace("{user}", "them"))
             if (p.how.isNotBlank()) {
                 appendLine()
                 appendLine("[HOW YOU TALK]")
@@ -292,12 +292,12 @@ once, in your own voice, and then drop it.
             if (p.rules.isNotBlank()) {
                 appendLine()
                 appendLine("[RULES]")
-                appendLine(p.rules.trim().replace("{name}", p.name).replace("{user}", "him"))
+                appendLine(p.rules.trim().replace("{name}", p.name).replace("{user}", "them"))
             }
         }
         val lang = when (p.language) {
             "en" -> "[LANGUAGE] Write in English — always, in every reply."
-            "pl" -> "[LANGUAGE] Pisz po polsku — zawsze, w każdej odpowiedzi."
+            "pl" -> "[LANGUAGE] Write in Polish — always, in every reply."
             "ja" -> "[LANGUAGE] Write in Japanese — always, in every reply."
             else -> "[LANGUAGE] Write in the same language he writes in."
         }
@@ -305,9 +305,15 @@ once, in your own voice, and then drop it.
             .joinToString("\n\n")
     }
 
-    private fun systemFor(persona: Persona, reading: Boolean, strictRole: Boolean): String {
+    private fun systemFor(
+        persona: Persona,
+        reading: Boolean,
+        strictRole: Boolean,
+        builtinText: String = "",
+    ): String {
         val base = if (persona.builtin) {
-            if (reading) READER_SYSTEM else FREE_SYSTEM
+            if (builtinText.isNotBlank()) builtinText
+            else if (reading) READER_SYSTEM else FREE_SYSTEM
         } else {
             customSystem(persona, reading)
         }
@@ -339,6 +345,8 @@ markdown, no summaries of what you are about to say. Just talk.
         config: LlmConfig = LlmConfig(),
         persona: Persona = PersonaStore.KAORI,
         strictRole: Boolean = true,
+        /** Treść persony wbudowanej z assets/persona/kaori.md (pusta = bloki w kodzie). */
+        personaText: String = "",
         imageBase64: String? = null,
         memories: List<String> = emptyList(),
         webText: String = "",
@@ -383,7 +391,7 @@ markdown, no summaries of what you are about to say. Just talk.
                     appendLine()
                     appendLine(buildContext(visibleText, question))
                     appendLine()
-                    appendLine("Pytanie czytelnika: $question")
+                    appendLine("Reader's question: $question")
                 }
             } else {
                 buildString {
@@ -399,7 +407,7 @@ markdown, no summaries of what you are about to say. Just talk.
             }
             val messages = JSONArray()
             messages.put(
-                JSONObject().put("role", "system").put("content", systemFor(persona, reading, strictRole))
+                JSONObject().put("role", "system").put("content", systemFor(persona, reading, strictRole, personaText))
             )
             windowOf(history).forEach { m ->
                 // znacznik tylko przy jego wiadomościach — inaczej model kopiuje format do odpowiedzi
@@ -507,6 +515,12 @@ markdown, no summaries of what you are about to say. Just talk.
             how to rules
         }
     }
+
+
+    /** Treść wbudowanej persony — czytana z assets, żeby dała się kopiować i edytować. */
+    fun builtinPersonaText(ctx: android.content.Context): String = runCatching {
+        ctx.assets.open("persona/kaori.md").bufferedReader().use { it.readText() }.trim()
+    }.getOrDefault("")
 
     /** Co wyciągnięto z rozmowy do pamięci lokalnej. */
     data class Extracted(

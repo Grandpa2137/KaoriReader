@@ -626,8 +626,8 @@ fun ReaderScreen(
                     when {
                         scrollMode -> "ch. ${chapterIndex + 1}/${book.chapters.size} · $scrollPercent% of the book"
                         pagesByChapter == null -> "…"
-                        counted -> "strona ${pageOffset + safePage + 1} z $totalPages"
-                        else -> "strona ${pageOffset + safePage + 1}"
+                        counted -> "page ${pageOffset + safePage + 1} of $totalPages"
+                        else -> "page ${pageOffset + safePage + 1}"
                     },
                     color = p.textDim,
                     fontSize = 10.sp,

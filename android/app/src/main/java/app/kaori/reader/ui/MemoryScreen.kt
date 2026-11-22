@@ -89,7 +89,7 @@ fun MemoryScreen(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text("What ${persona.name} remembers", color = p.text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                Text("wszystko lokalnie, na tym telefonie", color = p.textDim, fontSize = 9.sp)
+                Text("all of it local, on this phone", color = p.textDim, fontSize = 9.sp)
             }
         }
 
@@ -98,9 +98,9 @@ fun MemoryScreen(
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
             listOf(
-                "Fakty ${facts.size}",
+                "Facts ${facts.size}",
                 "Threads ${threads.size}",
-                "Streszczenia ${episodes.size}",
+                "Summaries ${episodes.size}",
             ).forEachIndexed { i, label ->
                 Box(
                     Modifier
