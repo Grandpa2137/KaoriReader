@@ -27,6 +27,12 @@ your phone.
 - built-in TTS: reads a page aloud and turns to the next one
 - **reading marks**: long-press the title in the reader to declare "read up to here" or
   "unread from here" — for the days you read the same book somewhere else
+- **stats that mean something**: pages read, this week, streak in days, minutes, and how much
+  of it you spent with her
+- **auto-collections**: the library groups series by title (tomes, "Vol. 3", "fixed" suffixes),
+  so a 20-volume series becomes one shelf without any manual work
+- **multi-select**: pick a dozen books, drop them into a collection or delete them at once
+- **home-screen shortcut** from Settings, pointing straight at the app
 
 **Companion (bring your own key)**
 - any OpenAI-compatible endpoint: OpenAI, OpenRouter, DeepSeek, Groq, or your own URL
@@ -44,7 +50,7 @@ your phone.
   copying it by hand
 - **she can see pictures** — attach a photo to a message, and book illustrations from the part
   you have already read are sent along with the text, so she comments on the image itself
-- **translate the page or the whole chapter** — the \u6587 button in the reader sends what you are
+- **translate the page or the whole chapter** — the 文 button in the reader sends what you are
   looking at to the model with a plain "translate this" instruction (no persona, no memory, no
   spoilers). Long chapters are split into chunks so the answer is not cut off, and the dialog
   tells you **how many tokens it will cost** before you spend anything. The result opens on its
@@ -64,9 +70,21 @@ your phone.
 > or send anything anywhere except your own configured endpoint — plus, for the built-in
 > persona only, a keyless Open-Meteo weather lookup (see Privacy).
 
+**Small things that make it feel finished**
+- replies arrive in bursts, like someone actually typing — not one giant wall of text
+- every book gets its own chat thread, plus one "just talking" thread with no book at all
+- the memory screen lists every fact, open thread and summary, each one deletable, plus a
+  one-button wipe — you can see exactly what she knows
+- reading keeps the screen awake; time spent is counted for the stats
+- persona builder works **without an API key** too: describe her in a sentence and the fields
+  are filled from a template, so the app is usable the minute it is installed
+- "in-character mode" can be switched off in Settings if you would rather have a plain assistant
+- five themes, three fonts, text size, pages or continuous scroll — per device, not per book
+
 **Your data**
 - export/import backup of progress, collections, bookmarks and stats (JSON)
 - memories are viewable and deletable one by one, or wiped entirely
+- translations are cached on the phone and can be cleared from Settings at any time
 - API keys encrypted with Android Keystore, `allowBackup=false`
 
 ---
@@ -140,6 +158,24 @@ The app never asks the model to "please not spoil". It simply does not send the 
 
 You can see exactly what she has been given: the badge in the chat header opens a preview
 of the text that was sent.
+
+---
+
+## What it deliberately does not do
+
+Being explicit here saves everyone a review comment:
+
+- **no cloud, no sync, no account.** There is no KaoriReader server. Move to a new phone by
+  exporting a backup.
+- **no bundled model.** You bring the key, so there is no subscription and nothing to break
+  when someone else's pricing changes.
+- **no DRM.** It opens normal, unencrypted EPUB 2/3 files. PDF, MOBI, AZW3 and CBZ are not supported.
+- **no voice.** Text to speech reads the book aloud, but there is no speech input and no voice chat.
+- **translation is per page or per chapter**, on request. There is no "translate the whole book
+  in one go" button: that is dozens of calls and a bill, and it belongs on a desktop.
+- **the companion is not a search engine.** She reads what you paste and what you have read;
+  she does not browse on her own.
+- **no Play Store.** The APK lives in Releases, and Obtainium handles updates.
 
 ---
 

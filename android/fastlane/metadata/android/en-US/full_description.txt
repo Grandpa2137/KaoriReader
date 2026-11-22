@@ -10,6 +10,10 @@ READER
 - bookmarks with exact position
 - built-in text to speech: reads a page aloud and turns the page for you
 - five themes, three fonts, text size, spoiler-safe progress tracking
+- stats: pages, this week, streak in days, minutes, and how much of it you spent with her
+- auto-collections: series are grouped by title, so a 20-volume series becomes one shelf
+- multi-select to move a dozen books into a collection or delete them at once
+- home screen shortcut from Settings
 
 COMPANION (bring your own key)
 - works with any OpenAI-compatible endpoint: OpenAI, DeepSeek, OpenRouter, Groq, or your own URL and model
@@ -20,7 +24,11 @@ COMPANION (bring your own key)
 - LOOKS THINGS UP: paste a URL into the chat and she fetches that page and reads it, including data hidden in the page's script JSON
 - SEES PICTURES: attach a photo to a message, and illustrations from the part of the book you have already read go with the text, so she comments on the image itself
 - TRANSLATES A PAGE OR A WHOLE CHAPTER: one tap in the reader sends the text you are looking at to the model, chunks long chapters so nothing gets cut off, shows the translation on its own full screen in your reading font (copy to clipboard), and tells you roughly how many tokens it will cost before you spend anything. Pick from 19 target languages, and change it right there to see the same text in another one. Translations are cached on the device, so the same text never costs twice (Settings shows the size and can clear it). Tap READ and the translated chapter opens in the reader as its own document — real pagination, page counter and text to speech — and the original book stays untouched
-- HER LANGUAGE: chips in the chat (auto / EN / PL / JA) change her answer language for this conversation only`n- in-character mode: no "as an AI", no meta commentary, no bullet lists
+- HER LANGUAGE: chips in the chat (auto / EN / PL / JA) change her answer language for this conversation only`n- replies arrive in bursts, like someone typing — not one wall of text
+- every book has its own chat thread, plus a separate "just talking" one
+- the memory screen lists every fact, thread and summary, each deletable, plus one-button wipe
+- the persona builder works without an API key too (fills the fields from a template)
+- in-character mode: no "as an AI", no meta commentary, no bullet lists
 
 READING MARKS
 - long-press the book title in the reader: `mark read up to here` or `mark unread from here` — handy when you read the same book on another device
@@ -34,6 +42,13 @@ WHAT SHE DOES NOT DO
 - she does not fetch pages you did not paste
 - she cannot read past the point where you are, by design
 - nothing is sent anywhere except the endpoint you configured (plus a keyless weather lookup for the built-in persona, cached for 30 minutes)
+
+WHAT IT DOES NOT DO
+- no cloud, no sync, no account — move phones with a JSON backup
+- no bundled model: your key, your bill, no subscription
+- no DRM: plain EPUB 2/3 only (no PDF, MOBI, AZW3, CBZ)
+- TTS reads aloud, but there is no speech input and no voice chat
+- translation is per page or per chapter on request, not a whole-book batch job
 
 GOOD TO KNOW
 - you need your own API key; the app itself is free and open source (MIT)
