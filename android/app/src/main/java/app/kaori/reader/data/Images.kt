@@ -12,9 +12,22 @@ import java.io.File
 object Images {
 
     private const val MAX_PX = 1024
+    // Zdjęcie z aparatu ma kilka megabajtów; limit chroni przed OOM na ogromnym pliku.
+    private const val MAX_SOURCE_BYTES = 24 * 1024 * 1024
 
     fun save(context: Context, uri: Uri, thread: String): File? = runCatching {
-        val raw = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
+        val raw = context.contentResolver.openInputStream(uri)?.use { input ->
+            val out = ByteArrayOutputStream(64 * 1024)
+            val chunk = ByteArray(16 * 1024)
+            var total = 0
+            while (total < MAX_SOURCE_BYTES) {
+                val n = input.read(chunk, 0, minOf(chunk.size, MAX_SOURCE_BYTES - total))
+                if (n <= 0) break
+                out.write(chunk, 0, n)
+                total += n
+            }
+            out.toByteArray()
+        } ?: return null
 
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(raw, 0, raw.size, bounds)

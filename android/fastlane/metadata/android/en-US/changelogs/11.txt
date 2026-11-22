@@ -1,0 +1,14 @@
+0.2.1
+
+- Progress, collections, bookmarks and
+  translations are written atomically: a crash
+  cannot leave a half written or empty file,
+  and a damaged file is set aside instead of
+  being overwritten.
+- Big EPUB chapters, covers and attached
+  photos are read with a size cap.
+- A corrupt backup reports a clear error.
+- "Mark unread" says openly that it stops
+  future text being sent, but does not erase
+  what she has already read.
+- 39 unit tests, up from 16.

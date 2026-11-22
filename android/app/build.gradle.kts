@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -7,8 +7,8 @@ plugins {
 import java.io.FileInputStream
 import java.util.Properties
 
-// Klucz podpisujący trzymamy POZA repo (android/keystore.properties jest w .gitignore).
-// Bez tego pliku build działa dalej — release wychodzi wtedy niepodpisany.
+// Klucz podpisujÄ…cy trzymamy POZA repo (android/keystore.properties jest w .gitignore).
+// Bez tego pliku build dziaĹ‚a dalej â€” release wychodzi wtedy niepodpisany.
 val keystorePropsFile = rootProject.file("keystore.properties")
 val keystoreProps = Properties().apply {
     if (keystorePropsFile.exists()) {
@@ -24,8 +24,8 @@ android {
         applicationId = "dev.kaori.reader"
         minSdk = 26
         targetSdk = 35
-        versionCode = 10
-        versionName = "0.2.0"
+        versionCode = 11
+        versionName = "0.2.1"
     }
 
     buildFeatures {
@@ -64,6 +64,12 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+
+    testOptions {
+        // Magazyny danych logujÄ… przez android.util.Log â€” w testach JVM ma to zwracaÄ‡ 0
+        // zamiast rzucaÄ‡ "Method w in android.util.Log not mocked".
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -81,6 +87,8 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Testy czystej logiki (spoiler guard, dzielenie tekstu) — bez androida i bez sieci.
+    // Testy czystej logiki (spoiler guard, dzielenie tekstu) â€” bez androida i bez sieci.
     testImplementation("junit:junit:4.13.2")
+    // Prawdziwy org.json â€” w unit testach android.jar to atrapa i put() zwraca null.
+    testImplementation("org.json:json:20240303")
 }

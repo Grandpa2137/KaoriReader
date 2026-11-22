@@ -8,6 +8,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
@@ -66,6 +67,29 @@ object EpubParser {
 
     private const val MIN_CHAPTER_CHARS = 200
 
+    // Pojedynczy wpis w ZIP-ie potrafi mieć setki megabajtów, a `readBytes()` bez limitu
+    // kończy się OutOfMemory na telefonie. HTML-a i tak nie ma sensu czytać w całości.
+    private const val MAX_TEXT_BYTES = 16 * 1024 * 1024
+    private const val MAX_IMAGE_BYTES = 12 * 1024 * 1024
+
+    /** Czyta wpis z ZIP-a, ale nigdy więcej niż [cap] bajtów (nadmiar jest ucinany). */
+    private fun readEntry(zip: ZipFile, entry: ZipEntry, cap: Int): ByteArray {
+        val hint = entry.size
+        val initial = if (hint in 1..cap.toLong()) hint.toInt() else 64 * 1024
+        zip.getInputStream(entry).use { input ->
+            val out = java.io.ByteArrayOutputStream(initial)
+            val chunk = ByteArray(16 * 1024)
+            var total = 0
+            while (total < cap) {
+                val n = input.read(chunk, 0, minOf(chunk.size, cap - total))
+                if (n <= 0) break
+                out.write(chunk, 0, n)
+                total += n
+            }
+            return out.toByteArray()
+        }
+    }
+
     // <img> zamieniamy na znacznik, bo Html.fromHtml zjada tagi razem z obrazkiem.
     // Dzięki temu po oczyszczeniu tekstu wiemy dokładnie, gdzie grafika stała.
     private const val IMG_MARK = "@@KIMG"
@@ -90,11 +114,11 @@ object EpubParser {
             // 1. container.xml -> ścieżka do OPF
             val containerEntry = zip.getEntry("META-INF/container.xml")
                 ?: error("Not an EPUB (no META-INF/container.xml)")
-            val opfPath = readRootfilePath(zip.getInputStream(containerEntry).readBytes())
+            val opfPath = readRootfilePath(readEntry(zip, containerEntry, MAX_TEXT_BYTES))
                 ?: error("No OPF file in the container")
 
             val opfDir = opfPath.substringBeforeLast('/', "")
-            val opfBytes = zip.getEntry(opfPath)?.let { zip.getInputStream(it).readBytes() }
+            val opfBytes = zip.getEntry(opfPath)?.let { readEntry(zip, it, MAX_TEXT_BYTES) }
                 ?: error("Missing OPF file: $opfPath")
 
             val (manifest, spineOrder) = readOpf(opfBytes)
@@ -112,7 +136,7 @@ object EpubParser {
                 val href = manifest[idref] ?: continue
                 val path = resolve(opfDir, href)
                 val entry = zip.getEntry(path) ?: continue
-                val html = zip.getInputStream(entry).readBytes().toString(Charsets.UTF_8)
+                val html = readEntry(zip, entry, MAX_TEXT_BYTES).toString(Charsets.UTF_8)
                 val srcs = mutableListOf<String>()
                 val marked = IMG_TAG.replace(html) { m ->
                     val src = IMG_SRC.find(m.value)?.groupValues?.get(1)
@@ -145,7 +169,7 @@ object EpubParser {
                 for (entry in zip.entries()) {
                     val name = entry.name.lowercase()
                     if (!name.endsWith(".xhtml") && !name.endsWith(".html")) continue
-                    val html = zip.getInputStream(entry).readBytes().toString(Charsets.UTF_8)
+                    val html = readEntry(zip, entry, MAX_TEXT_BYTES).toString(Charsets.UTF_8)
                     val text = htmlToText(html)
                     if (looksLikeContent(text)) {
                         val sp = headingSpans(html)
@@ -207,15 +231,17 @@ object EpubParser {
 
         // guide wskazuje czasem stronę XHTML — wtedy wyciągamy z niej <img>
         var bytes: ByteArray? = candidate?.href?.let { href ->
-            zip.getEntry(resolve(opfDir, href))?.let { zip.getInputStream(it).readBytes() }
+            zip.getEntry(resolve(opfDir, href))?.let { readEntry(zip, it, MAX_IMAGE_BYTES) }
         }
         if (bytes == null && guideCoverHref != null) {
             val pagePath = resolve(opfDir, guideCoverHref)
-            val html = zip.getEntry(pagePath)?.let { zip.getInputStream(it).readBytes().toString(Charsets.UTF_8) }
+            val html = zip.getEntry(pagePath)?.let {
+                readEntry(zip, it, MAX_TEXT_BYTES).toString(Charsets.UTF_8)
+            }
             val img = html?.let { Regex("(?:src|xlink:href)=\"([^\"]+\\.(?:jpe?g|png))\"", RegexOption.IGNORE_CASE).find(it) }
             if (img != null) {
                 val imgPath = resolve(pagePath.substringBeforeLast('/', ""), img.groupValues[1])
-                bytes = zip.getEntry(imgPath)?.let { zip.getInputStream(it).readBytes() }
+                bytes = zip.getEntry(imgPath)?.let { readEntry(zip, it, MAX_IMAGE_BYTES) }
             }
         }
         if (bytes == null) return

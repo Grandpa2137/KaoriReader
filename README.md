@@ -144,9 +144,12 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite covers the two things that must not break: `ReadRanges` (the spoiler guard — ranges,
-merging, gaps, the 400-range cap and `textOf`) and `TextChunks` (token estimate and
-chapter splitting, so a long chapter is never cut in half).
+The suite covers the parts that must not break: `ReadRanges` (the spoiler guard — ranges,
+merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
+chapter splitting, so a long chapter is never cut in half), and the data layer —
+`AtomicJson` (temp file + rename, `.bak` of the previous version), `ProgressStore`
+(corrupt JSON is set aside instead of being overwritten with an empty map) and
+`TranslationStore` (cache keys, no leaking between books).
 
 ---
 
@@ -163,6 +166,14 @@ The app never asks the model to "please not spoil". It simply does not send the 
 
 You can see exactly what she has been given: the badge in the chat header opens a preview
 of the text that was sent.
+
+**What it does not do.** The guard decides what she is *sent*, not what she *already knows*.
+If you read chapters 1–30 and then tap "mark unread from here" at chapter 20, the guard will
+stop sending 20–30 — but the earlier messages are still in the chat history, and anything she
+learned there is still in her memory until you clear it (chat: the `clear` next to the thread;
+memory: Settings → Memory → *Erase all memory*). It is a boundary on the model's input, not an
+amnesia button. There is also nothing to stop a model from guessing a plot it was trained on —
+the guard removes the evidence, not the possibility of a lucky guess.
 
 ---
 

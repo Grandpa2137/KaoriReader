@@ -39,8 +39,13 @@ object ProgressStore {
 
     private fun file(context: Context) = File(context.filesDir, "progress.json")
 
-    fun load(context: Context): Map<String, ReadingProgress> {
-        val f = file(context)
+    fun load(context: Context): Map<String, ReadingProgress> = loadFrom(file(context))
+
+    /**
+     * Wczytanie z konkretnego pliku — wydzielone, żeby dało się to przetestować na JVM
+     * (uszkodzony plik, poprawny plik, brak pliku) bez Androida.
+     */
+    internal fun loadFrom(f: File): Map<String, ReadingProgress> {
         if (!f.exists()) return emptyMap()
         return runCatching {
             val obj = JSONObject(f.readText())
@@ -73,7 +78,11 @@ object ProgressStore {
         writeAll(context, all)
     }
 
-    private fun writeAll(context: Context, all: Map<String, ReadingProgress>) {
+    private fun writeAll(context: Context, all: Map<String, ReadingProgress>) =
+        writeTo(file(context), all)
+
+    /** Zapis do konkretnego pliku — atomowy, używany też przez testy. */
+    internal fun writeTo(target: java.io.File, all: Map<String, ReadingProgress>) {
         val obj = JSONObject()
         all.forEach { (k, v) ->
             obj.put(
@@ -83,7 +92,7 @@ object ProgressStore {
                     .put("rr", readTo(v.read))
             )
         }
-        runCatching { AtomicJson.write(file(context), obj.toString()) }
+        runCatching { AtomicJson.write(target, obj.toString()) }
     }
 
     fun save(context: Context, bookId: String, p: ReadingProgress) {

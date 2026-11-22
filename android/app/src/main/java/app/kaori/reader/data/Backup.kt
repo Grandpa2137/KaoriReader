@@ -16,6 +16,7 @@ object Backup {
 
     private const val VERSION = 1
     private const val PENDING = "pending_backup.json"
+    private const val MAX_BACKUP_BYTES = 8 * 1024 * 1024
 
     data class Report(
         val progress: Int = 0,
@@ -101,10 +102,28 @@ object Backup {
     // ------------------------------------------------------------------ import
 
     fun import(ctx: Context, uri: Uri): Report {
-        val raw = ctx.contentResolver.openInputStream(uri)!!.use {
-            it.readBytes().toString(Charsets.UTF_8)
+        val raw = ctx.contentResolver.openInputStream(uri)?.use { input ->
+            // Backup to kilka kilobajtów; limit chroni przed wczytaniem 500 MB przez pomyłkę.
+            val out = java.io.ByteArrayOutputStream(64 * 1024)
+            val chunk = ByteArray(16 * 1024)
+            var total = 0
+            while (total < MAX_BACKUP_BYTES) {
+                val n = input.read(chunk, 0, minOf(chunk.size, MAX_BACKUP_BYTES - total))
+                if (n <= 0) break
+                out.write(chunk, 0, n)
+                total += n
+            }
+            out.toByteArray().toString(Charsets.UTF_8)
+        } ?: throw IllegalArgumentException("Couldn't open that file")
+
+        if (raw.length >= MAX_BACKUP_BYTES) {
+            throw IllegalArgumentException("That file is too big to be a Kaori Reader backup")
         }
-        val root = JSONObject(raw)
+        val root = try {
+            JSONObject(raw)
+        } catch (e: org.json.JSONException) {
+            throw IllegalArgumentException("That file isn't a readable backup")
+        }
         if (root.optString("app") != "kaori-reader") {
             throw IllegalArgumentException("This is not a Kaori Reader backup")
         }
@@ -251,7 +270,9 @@ object Backup {
         runCatching { AtomicJson.write(file, old.toString()) }
     }
 
-    private fun readRanges(arr: JSONArray?): List<IntRange> {
+    // internal, żeby dało się to przetestować bez Androida: od tego zależy spoiler guard
+    // po imporcie kopii, a uszkodzona para [start, end] nie może niczego poszerzyć.
+    internal fun readRanges(arr: JSONArray?): List<IntRange> {
         if (arr == null) return emptyList()
         var out = emptyList<IntRange>()
         for (i in 0 until arr.length()) {

@@ -949,6 +949,16 @@ fun ReaderScreen(
                                 fontSize = 11.5.sp,
                             )
                         }
+                        Spacer(Modifier.height(10.dp))
+                        // Uczciwie: znacznik zmienia to, co dostaje model, a nie to, co już wie.
+                        Text(
+                            "Marking unread stops the text from being sent from now on. " +
+                                "What she already read stays in the chat history and in her memory " +
+                                "until you clear it there.",
+                            color = p.textDim,
+                            fontSize = 9.sp,
+                            lineHeight = 13.sp,
+                        )
                     }
                 },
                 confirmButton = {

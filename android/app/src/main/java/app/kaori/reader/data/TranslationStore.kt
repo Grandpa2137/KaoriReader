@@ -19,8 +19,10 @@ object TranslationStore {
     private const val MAX_FILES = 400
     private const val MAX_BYTES = 30L * 1024 * 1024
 
-    private fun dir(ctx: Context, bookId: String) =
-        File(File(ctx.filesDir, "translations"), bookId.replace(Regex("[^A-Za-z0-9_-]"), "_"))
+    private fun dir(root: File, bookId: String) =
+        File(root, "translations/" + bookId.replace(Regex("[^A-Za-z0-9_-]"), "_"))
+
+    private fun root(ctx: Context): File = ctx.filesDir
 
     private fun key(text: String): String {
         val md = MessageDigest.getInstance("SHA-1")
@@ -28,11 +30,15 @@ object TranslationStore {
         return bytes.joinToString("") { "%02x".format(it) }.take(20)
     }
 
-    private fun file(ctx: Context, bookId: String, lang: String, text: String) =
-        File(dir(ctx, bookId), "${lang.lowercase()}_${key(text)}.txt")
+    private fun file(root: File, bookId: String, lang: String, text: String) =
+        File(dir(root, bookId), "${lang.lowercase()}_${key(text)}.txt")
 
-    fun get(ctx: Context, bookId: String, lang: String, text: String): String? {
-        val f = file(ctx, bookId, lang, text)
+    fun get(ctx: Context, bookId: String, lang: String, text: String): String? =
+        getFrom(root(ctx), bookId, lang, text)
+
+    /** Wariant testowalny: korzeń katalogu zamiast Context. */
+    internal fun getFrom(root: File, bookId: String, lang: String, text: String): String? {
+        val f = file(root, bookId, lang, text)
         if (!f.exists()) return null
         val body = runCatching { f.readText() }.getOrNull() ?: return null
         if (body.isBlank()) return null
@@ -41,21 +47,27 @@ object TranslationStore {
         return body
     }
 
-    fun put(ctx: Context, bookId: String, lang: String, text: String, translation: String) {
+    fun put(ctx: Context, bookId: String, lang: String, text: String, translation: String) =
+        putInto(root(ctx), bookId, lang, text, translation)
+
+    /** Wariant testowalny: korzeń katalogu zamiast Context. */
+    internal fun putInto(root: File, bookId: String, lang: String, text: String, translation: String) {
         if (text.isBlank() || translation.isBlank()) return
-        val d = dir(ctx, bookId)
+        val d = dir(root, bookId)
         runCatching {
             d.mkdirs()
-            AtomicJson.write(file(ctx, bookId, lang, text), translation)
+            AtomicJson.write(file(root, bookId, lang, text), translation)
         }
-        prune(ctx)
+        prune(root)
     }
 
     /** Ile miejsca zajmują tłumaczenia — do pokazania w ustawieniach. */
-    fun sizeBytes(ctx: Context): Long {
-        val root = File(ctx.filesDir, "translations")
-        if (!root.exists()) return 0L
-        return root.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    fun sizeBytes(ctx: Context): Long = sizeBytesIn(root(ctx))
+
+    internal fun sizeBytesIn(base: File): Long {
+        val dir = File(base, "translations")
+        if (!dir.exists()) return 0L
+        return dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
     }
 
     fun clear(ctx: Context) {
@@ -64,8 +76,8 @@ object TranslationStore {
     }
 
     /** Tnie cache, gdy urośnie: najpierw po liczbie plików, potem po rozmiarze. */
-    private fun prune(ctx: Context) {
-        val root = File(ctx.filesDir, "translations")
+    private fun prune(base: File) {
+        val root = File(base, "translations")
         if (!root.exists()) return
         val files = root.walkTopDown().filter { it.isFile }.sortedBy { it.lastModified() }.toList()
         var total = files.sumOf { it.length() }
