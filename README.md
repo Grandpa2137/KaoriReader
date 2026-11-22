@@ -48,7 +48,9 @@ your phone.
   looking at to the model with a plain "translate this" instruction (no persona, no memory, no
   spoilers). Long chapters are split into chunks so the answer is not cut off, and the dialog
   tells you **how many tokens it will cost** before you spend anything. The result opens on its
-  own full screen in your reading font, with copy to clipboard and **19 languages** to pick from
+  own full screen in your reading font, with copy to clipboard and **19 languages** to pick from.
+  Translations are **cached on the device**: the same text and language never costs twice, the
+  header says `saved, 0 tokens`, and Settings shows how much space they take (with a Clear button)
 - **her language** — chips in the chat (auto / EN / PL / JA) change the language she answers in,
   for this conversation only, without touching the persona
 - strict in-character mode: no "as an AI", no meta-commentary, no lists

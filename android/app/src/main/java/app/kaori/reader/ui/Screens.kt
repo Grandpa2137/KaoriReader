@@ -169,6 +169,7 @@ fun ReaderScreen(
     var translateErr by remember { mutableStateOf<String?>(null) }
     var translateTo by remember { mutableStateOf("Polish") }
     var translateFrom by remember { mutableStateOf("") }
+    var translateCached by remember { mutableStateOf(false) }
     // Co tłumaczymy: widoczną stronę czy cały rozdział (ten drugi to kilka wywołań).
     var translateWholeChapter by remember { mutableStateOf(false) }
     var translateStep by remember { mutableStateOf(0) }
@@ -1025,25 +1026,43 @@ fun ReaderScreen(
                         enabled = source.isNotBlank(),
                         onClick = {
                             showTranslate = false
-                            translateBusy = true
                             translateErr = null
                             translated = null
                             translateFrom = source
                             translateStep = 0
                             translateTotal = 0
+                            val bookIdForCache = book.id
+                            val lang = translateTo
                             scope.launch {
+                                // Najpierw dysk: ten sam tekst w tym samym języku nie kosztuje drugi raz.
+                                val cached = withContext(Dispatchers.IO) {
+                                    app.kaori.reader.data.TranslationStore
+                                        .get(ctx, bookIdForCache, lang, source)
+                                }
+                                if (cached != null) {
+                                    translated = cached
+                                    translateCached = true
+                                    return@launch
+                                }
+                                translateCached = false
+                                translateBusy = true
                                 val res = app.kaori.reader.data.KaoriEngine.translate(
                                     apiKey = apiKey,
                                     config = config,
                                     text = source,
-                                    target = translateTo,
+                                    target = lang,
                                     onProgress = { d, t ->
                                         translateStep = d
                                         translateTotal = t
                                     },
                                 )
-                                res.onSuccess { translated = it }
-                                    .onFailure { translateErr = it.message ?: "couldn't translate" }
+                                res.onSuccess { text ->
+                                    translated = text
+                                    withContext(Dispatchers.IO) {
+                                        app.kaori.reader.data.TranslationStore
+                                            .put(ctx, bookIdForCache, lang, source, text)
+                                    }
+                                }.onFailure { translateErr = it.message ?: "couldn't translate" }
                                 translateBusy = false
                             }
                         }
@@ -1087,22 +1106,39 @@ fun ReaderScreen(
                                         if (changed && translateFrom.isNotBlank()) {
                                             translated = null
                                             translateErr = null
-                                            translateBusy = true
                                             translateStep = 0
                                             translateTotal = 0
+                                            val src = translateFrom
+                                            val bookIdForCache = book.id
                                             scope.launch {
+                                                val cached = withContext(Dispatchers.IO) {
+                                                    app.kaori.reader.data.TranslationStore
+                                                        .get(ctx, bookIdForCache, lang, src)
+                                                }
+                                                if (cached != null) {
+                                                    translated = cached
+                                                    translateCached = true
+                                                    return@launch
+                                                }
+                                                translateCached = false
+                                                translateBusy = true
                                                 val res = app.kaori.reader.data.KaoriEngine.translate(
                                                     apiKey = apiKey,
                                                     config = config,
-                                                    text = translateFrom,
+                                                    text = src,
                                                     target = lang,
                                                     onProgress = { d, t ->
                                                         translateStep = d
                                                         translateTotal = t
                                                     },
                                                 )
-                                                res.onSuccess { translated = it }
-                                                    .onFailure { translateErr = it.message ?: "couldn't translate" }
+                                                res.onSuccess { text ->
+                                                    translated = text
+                                                    withContext(Dispatchers.IO) {
+                                                        app.kaori.reader.data.TranslationStore
+                                                            .put(ctx, bookIdForCache, lang, src, text)
+                                                    }
+                                                }.onFailure { translateErr = it.message ?: "couldn't translate" }
                                                 translateBusy = false
                                             }
                                         }
@@ -1152,8 +1188,10 @@ fun ReaderScreen(
                         Column(Modifier.weight(1f)) {
                             Text("Translation", color = p.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             Text(
-                                translateTo + (if (translateWholeChapter) " · whole chapter" else " · this page"),
-                                color = p.textDim,
+                                translateTo +
+                                    (if (translateWholeChapter) " · whole chapter" else " · this page") +
+                                    (if (translateCached) " · saved, 0 tokens" else ""),
+                                color = if (translateCached) p.accent else p.textDim,
                                 fontSize = 9.sp,
                             )
                         }
@@ -1432,6 +1470,8 @@ fun SettingsScreen(
     baseUrl: String,
     model: String,
     onModelConfig: (String, String) -> Unit,
+    translationInfo: String = "",
+    onClearTranslations: () -> Unit = {},
 ) {
     val p = LocalPalette.current
 
@@ -1611,6 +1651,26 @@ fun SettingsScreen(
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) { Text("Import", color = p.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+            }
+
+            // Tłumaczenia leżą na dysku — mówimy ile i pozwalamy je usunąć.
+            if (translationInfo.isNotBlank()) {
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(p.uiSurface)
+                        .clickable { onClearTranslations() }
+                        .padding(13.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Saved translations", color = p.textDim, fontSize = 10.sp)
+                        Text(translationInfo, color = p.text, fontSize = 12.sp)
+                    }
+                    Text("Clear", color = p.accent, fontSize = 11.sp)
+                }
             }
 
             Spacer(Modifier.height(24.dp))

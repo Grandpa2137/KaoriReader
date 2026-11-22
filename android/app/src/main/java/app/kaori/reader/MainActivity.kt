@@ -695,6 +695,20 @@ private fun KaoriApp() {
                                     "$f facts · $t threads · $e summaries"
                                 },
                                 onMemory = { showMemory = true },
+                                translationInfo = run {
+                                    val bytes = app.kaori.reader.data.TranslationStore.sizeBytes(ctx)
+                                    when {
+                                        bytes <= 0 -> ""
+                                        bytes < 1024L -> "$bytes B on this phone"
+                                        bytes < 1024L * 1024L -> "${bytes / 1024} KB on this phone"
+                                        else -> "%.1f MB on this phone".format(bytes / 1048576.0)
+                                    }
+                                },
+                                onClearTranslations = {
+                                    scope.launch(Dispatchers.IO) {
+                                        app.kaori.reader.data.TranslationStore.clear(ctx)
+                                    }
+                                },
                                 strictRole = settings.strictRole,
                                 onStrictRole = { scope.launch { store.setStrictRole(it) } },
                                 baseUrl = settings.baseUrl,
