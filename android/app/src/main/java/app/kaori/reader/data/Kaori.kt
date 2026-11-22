@@ -310,6 +310,7 @@ once, in your own voice, and then drop it.
         reading: Boolean,
         strictRole: Boolean,
         builtinText: String = "",
+        langOverride: String = "",
     ): String {
         val base = if (persona.builtin) {
             if (builtinText.isNotBlank()) builtinText
@@ -317,8 +318,17 @@ once, in your own voice, and then drop it.
         } else {
             customSystem(persona, reading)
         }
+        // Język wybrany chipem w czacie bije wszystko inne — i jest podany dwa razy,
+        // bo modele najczęściej gubią właśnie instrukcję językową.
+        val forced = when (langOverride) {
+            "en" -> "\n\n[LANGUAGE] Answer in English. Always, in every reply, whatever he writes in."
+            "pl" -> "\n\n[LANGUAGE] Answer in Polish. Always, in every reply, whatever he writes in."
+            "ja" -> "\n\n[LANGUAGE] Answer in Japanese. Always, in every reply, whatever he writes in."
+            else -> ""
+        }
         // Na końcu promptu, bo tam modele słuchają najmocniej.
-        return if (strictRole) base + "\n\n" + STRICT_ROLE_BLOCK else base
+        val tail = if (strictRole) "\n\n" + STRICT_ROLE_BLOCK else ""
+        return base + forced + tail
     }
 
     /**
@@ -347,6 +357,8 @@ markdown, no summaries of what you are about to say. Just talk.
         strictRole: Boolean = true,
         /** Treść persony wbudowanej z assets/persona/kaori.md (pusta = bloki w kodzie). */
         personaText: String = "",
+        /** Wymuszenie języka odpowiedzi z czatu („”, „en”, „pl”, „ja”). */
+        langOverride: String = "",
         imageBase64: String? = null,
         memories: List<String> = emptyList(),
         webText: String = "",
@@ -407,7 +419,10 @@ markdown, no summaries of what you are about to say. Just talk.
             }
             val messages = JSONArray()
             messages.put(
-                JSONObject().put("role", "system").put("content", systemFor(persona, reading, strictRole, personaText))
+                JSONObject().put("role", "system").put(
+                    "content",
+                    systemFor(persona, reading, strictRole, personaText, langOverride),
+                )
             )
             windowOf(history).forEach { m ->
                 // znacznik tylko przy jego wiadomościach — inaczej model kopiuje format do odpowiedzi

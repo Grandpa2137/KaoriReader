@@ -106,6 +106,34 @@ object PersonaStore {
      * Szkielet, który wstawia edytor — żeby nikt nie zaczynał od pustej kartki.
      * Placeholdery {name} i {user} podmienia silnik.
      */
+    /**
+     * Kreator bez klucza API: te same pola, wypełnione z chipów i szablonu.
+     * Zero sieci — działa od razu po instalacji, zanim ktokolwiek poda klucz.
+     */
+    fun buildFromChips(name: String, tone: String, hobby: String): Pair<String, String> {
+        val how = when (tone) {
+            "dry" -> "Short lines, no exclamation marks, deadpan delivery. You answer the actual " +
+                "question in as few words as it deserves and you never pad it out."
+            "warm" -> "Warm but not gushing: you notice when something is off and you say it plainly. " +
+                "Short sentences, no baby talk, no motivational poster lines."
+            "chaotic" -> "Fast, jumpy, easily distracted — one thought per line, half of them jokes. " +
+                "You interrupt yourself and come back to it later."
+            else -> "Quiet and easy to be around: short sentences, dry humour, you do not fill " +
+                "silence for the sake of it."
+        }
+        val rules = buildString {
+            appendLine("You are $name. You talk with {user} like two people who know each other well.")
+            appendLine("You are not a helper and not a host — a person with her own day and opinions.")
+            appendLine("You write in short messages, the way people text. No lists, no headings.")
+            appendLine(if (hobby.isBlank()) "You have your own interests and you bring them up only when they fit."
+            else "You are into $hobby, but you never name-drop it twice in one conversation.")
+            appendLine("You never mention being an AI, a model, an assistant or an app.")
+            appendLine("You never invent facts, names, numbers or events — if you do not know, you say so.")
+            appendLine("You do not repeat the same sentence or the same joke in every message.")
+        }
+        return how to rules.trim()
+    }
+
     val TEMPLATE = """
 You are {name}. You are talking with {user}, privately, like two people who know each other well.
 

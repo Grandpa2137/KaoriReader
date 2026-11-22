@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -85,6 +86,7 @@ import kotlinx.coroutines.withContext
 // --------------------------------------------------------------------------- //
 //  CZYTNIK
 // --------------------------------------------------------------------------- //
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
     book: Book,
@@ -109,6 +111,9 @@ fun ReaderScreen(
     /** Tłumaczenie strony: potrzebny klucz i model, ten sam co w czacie. */
     apiKey: String = "",
     config: app.kaori.reader.data.LlmConfig = app.kaori.reader.data.LlmConfig(),
+    /** „Przeczytane do tego miejsca" / „od tego miejsca nieprzeczytane" (offset w książce). */
+    onMarkReadUpTo: (Int) -> Unit = {},
+    onMarkUnreadFrom: (Int) -> Unit = {},
 ) {
     val p = LocalPalette.current
     val chapter = book.chapters.getOrNull(chapterIndex)
@@ -161,6 +166,8 @@ fun ReaderScreen(
     var translateWholeChapter by remember { mutableStateOf(false) }
     var translateStep by remember { mutableStateOf(0) }
     var translateTotal by remember { mutableStateOf(0) }
+    // Ręczne znaczniki: czytanie na dwóch urządzeniach albo powrót po roku.
+    var showMarks by remember { mutableStateOf(false) }
     // Reading na głos — systemowy syntezator, strona po stronie.
     val tts = remember { app.kaori.reader.data.TtsPlayer(ctx) }
     var speaking by remember { mutableStateOf(false) }
@@ -355,7 +362,12 @@ fun ReaderScreen(
                     fontSize = 11.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.clickable { onBack() },
+                modifier = Modifier
+                    .clickable { onBack() }
+                    .combinedClickable(
+                        onClick = { onBack() },
+                        onLongClick = { showMarks = true },
+                    ),
             )
             Spacer(Modifier.weight(1f))
             // Reading na głos — tylko w trybie stron, bo tam „następna strona”
@@ -877,6 +889,58 @@ fun ReaderScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { showBookmarks = false }) { Text("Close") }
+                },
+            )
+        }
+
+        // --- znaczniki przeczytania ---
+        if (showMarks) {
+            val here = if (scrollMode) {
+                // w scrollu bierzemy początek rozdziału — bezpieczniej mniej niż więcej
+                chapterStarts.getOrElse(chapterIndex) { 0 }
+            } else {
+                val pg = chapterPages?.getOrNull(safePage)
+                val base = chapterStarts.getOrElse(chapterIndex) { 0 }
+                if (pg == null) base else base + pg.start + pg.text.length
+            }
+            AlertDialog(
+                onDismissRequest = { showMarks = false },
+                containerColor = p.uiBg,
+                title = { Text("Reading marks", fontSize = 15.sp) },
+                text = {
+                    Column {
+                        Text(
+                            "Position about ${here} characters into the book. " +
+                                "Useful when you read the same book somewhere else.",
+                            color = p.textDim,
+                            fontSize = 9.5.sp,
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Box(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                .background(p.uiSurface)
+                                .clickable { showMarks = false; onMarkReadUpTo(here) }
+                                .padding(vertical = 11.dp),
+                            contentAlignment = Alignment.Center,
+                        ) { Text("Mark read up to here", color = p.accent, fontSize = 11.5.sp) }
+                        Spacer(Modifier.height(7.dp))
+                        Box(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                .background(p.uiSurface)
+                                .clickable { showMarks = false; onMarkUnreadFrom(here) }
+                                .padding(vertical = 11.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "Mark unread from here",
+                                color = androidx.compose.ui.graphics.Color(0xFFE08A9A),
+                                fontSize = 11.5.sp,
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showMarks = false }) { Text("Close") }
                 },
             )
         }

@@ -25,6 +25,8 @@ your phone.
 - full-text search **inside a book** and **across the whole library**, jumping to the exact line
 - bookmarks with exact position, reading progress that never gets lost
 - built-in TTS: reads a page aloud and turns to the next one
+- **reading marks**: long-press the title in the reader to declare "read up to here" or
+  "unread from here" — for the days you read the same book somewhere else
 
 **Companion (bring your own key)**
 - any OpenAI-compatible endpoint: OpenAI, OpenRouter, DeepSeek, Groq, or your own URL
@@ -42,9 +44,12 @@ your phone.
   copying it by hand
 - **she can see pictures** — attach a photo to a message, and book illustrations from the part
   you have already read are sent along with the text, so she comments on the image itself
-- **translate the page you are on** — the 文 button in the reader sends the visible page to the
-  model with a plain "translate this" instruction (no persona, no memory, no spoilers) and
-  shows the result beside it, with copy to clipboard. Pick the target language in the dialog
+- **translate the page or the whole chapter** — the \u6587 button in the reader sends what you are
+  looking at to the model with a plain "translate this" instruction (no persona, no memory, no
+  spoilers). Long chapters are split into chunks so the answer is not cut off, and the dialog
+  tells you **how many tokens it will cost** before you spend anything
+- **her language** — chips in the chat (auto / EN / PL / JA) change the language she answers in,
+  for this conversation only, without touching the persona
 - strict in-character mode: no "as an AI", no meta-commentary, no lists
 - every reply is written in her voice; translation or language switching happens only when you
   ask for it in the message

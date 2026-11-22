@@ -470,6 +470,33 @@ private fun KaoriApp() {
                         onBack = { inReader = false },
                         apiKey = settings.apiKey,
                         config = llm,
+                        onMarkReadUpTo = { upto ->
+                            val b = current
+                            if (b != null) {
+                                val prev = progress[b.id]
+                                val entry = ReadingProgress(
+                                    chapter = chapter,
+                                    addr = prev?.addr ?: 0,
+                                    pages = prev?.pages ?: 0,
+                                    updated = System.currentTimeMillis(),
+                                    scrollOffset = prev?.scrollOffset ?: 0,
+                                    read = app.kaori.reader.data.ReadRanges.add(
+                                        prev?.read.orEmpty(), 0, upto.coerceAtLeast(1),
+                                    ),
+                                )
+                                progress = progress + (b.id to entry)
+                                scope.launch(Dispatchers.IO) { ProgressStore.save(ctx, b.id, entry) }
+                            }
+                        },
+                        onMarkUnreadFrom = { from ->
+                            val b = current
+                            val prev = if (b != null) progress[b.id] else null
+                            if (b != null && prev != null) {
+                                val kept = prev.read.filter { it.last < from }
+                                progress = progress + (b.id to prev.copy(read = kept, updated = System.currentTimeMillis()))
+                                scope.launch(Dispatchers.IO) { ProgressStore.setRead(ctx, b.id, kept) }
+                            }
+                        },
                         onOpenChat = {
                             chatFromReader = true
                             inReader = false

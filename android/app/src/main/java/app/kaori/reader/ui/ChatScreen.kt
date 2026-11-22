@@ -89,6 +89,8 @@ fun ChatScreen(
     var busy by remember { mutableStateOf(false) }
     // Jednorazowa informacja „to weźmie tokeny" — pamięć zapisuje się sama co 12 wiadomości.
     var tokenNotice by remember { mutableStateOf<String?>(null) }
+    // Język tej rozmowy — zmienia się z nastrojem, więc jest chipem, nie ustawieniem.
+    var langOverride by remember { mutableStateOf("") }
     var pendingImage by remember { mutableStateOf<java.io.File?>(null) }
     var viewer by remember { mutableStateOf<String?>(null) }
     var showContext by remember { mutableStateOf(false) }
@@ -128,6 +130,7 @@ fun ChatScreen(
                 persona = persona,
                 strictRole = strictRole,
                 personaText = personaText,
+                langOverride = langOverride,
                 bookTitle = bookTitle,
                 visibleText = visibleText(),
                 history = history,
@@ -285,6 +288,29 @@ fun ChatScreen(
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text("API key", color = p.accent, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+        }
+
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("her language", color = p.textDim, fontSize = 8.5.sp)
+            listOf("" to "auto", "en" to "EN", "pl" to "PL", "ja" to "JA").forEach { (id, label) ->
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(7.dp))
+                        .background(if (langOverride == id) p.accent.copy(alpha = 0.18f) else p.uiSurface)
+                        .clickable { langOverride = id }
+                        .padding(horizontal = 7.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        label,
+                        color = if (langOverride == id) p.accent else p.textMuted,
+                        fontSize = 8.5.sp,
+                    )
                 }
             }
         }

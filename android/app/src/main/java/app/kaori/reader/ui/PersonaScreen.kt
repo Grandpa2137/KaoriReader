@@ -332,12 +332,43 @@ private fun PersonaEditor(
                         busy = true
                         error = null
                         scope.launch {
-                            val res = KaoriEngine.buildPersona(apiKey, config, idea.trim())
-                            busy = false
-                            res.onSuccess { built ->
+                            if (apiKey.isBlank()) {
+                                // Bez klucza nie ma sieci — kreator składa personę z szablonu.
+                                val lower = idea.lowercase()
+                                val tone = when {
+                                    listOf("ironi", "dry", "sarkaz", "suchar").any { it in lower } -> "dry"
+                                    listOf("ciep", "warm", "mił", "mil", "kind").any { it in lower } -> "warm"
+                                    listOf("chaot", "energ", "loud", "szalon").any { it in lower } -> "chaotic"
+                                    else -> "calm"
+                                }
+                                // tylko konkretne hobby — „noc" czy „reading" w zdaniu to nie hobby samo w sobie
+                                val hobby = listOf(
+                                    "gr" to "games", "game" to "games", "gier" to "games",
+                                    "muzyk" to "music", "music" to "music",
+                                    "czyt" to "reading", "read" to "reading",
+                                    "film" to "films", "anime" to "anime", "mang" to "manga",
+                                ).firstOrNull { (needle, _) -> needle in lower }?.second.orEmpty()
+                                    .ifBlank {
+                                        // „czytanie nocą" → to jest hobby, ale niech brzmi jak hobby
+                                        if ("noc" in lower || "night" in lower) "late-night reading" else ""
+                                    }
+                                val built = PersonaStore.buildFromChips(
+                                    name.ifBlank { "Kaori" },
+                                    tone,
+                                    hobby,
+                                )
                                 how = built.first
-                                rules = built.second.ifBlank { PersonaStore.TEMPLATE }
-                            }.onFailure { e -> error = e.message ?: "Failed" }
+                                rules = built.second
+                                error = "built from a template — add an API key for a model-written version"
+                                busy = false
+                            } else {
+                                val res = KaoriEngine.buildPersona(apiKey, config, idea.trim())
+                                res.onSuccess { built ->
+                                    how = built.first
+                                    rules = built.second.ifBlank { PersonaStore.TEMPLATE }
+                                }.onFailure { e -> error = e.message ?: "Failed" }
+                                busy = false
+                            }
                         }
                     }
                     .padding(vertical = 12.dp),

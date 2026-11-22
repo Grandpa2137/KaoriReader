@@ -58,6 +58,30 @@ object ProgressStore {
         }.getOrDefault(emptyMap())
     }
 
+    /**
+     * Ręczne ustawienie przeczytanych zakresów („mark unread from here").
+     * Bez scalania — inaczej nie dałoby się cofnąć oznaczenia.
+     */
+    fun setRead(context: Context, bookId: String, ranges: List<IntRange>) {
+        val all = load(context).toMutableMap()
+        val old = all[bookId] ?: return
+        all[bookId] = old.copy(read = ranges, updated = System.currentTimeMillis())
+        writeAll(context, all)
+    }
+
+    private fun writeAll(context: Context, all: Map<String, ReadingProgress>) {
+        val obj = JSONObject()
+        all.forEach { (k, v) ->
+            obj.put(
+                k,
+                JSONObject().put("c", v.chapter).put("a", v.addr).put("n", v.pages)
+                    .put("t", v.updated).put("so", v.scrollOffset)
+                    .put("rr", readTo(v.read))
+            )
+        }
+        runCatching { file(context).writeText(obj.toString()) }
+    }
+
     fun save(context: Context, bookId: String, p: ReadingProgress) {
         val all = load(context).toMutableMap()
         val old = all[bookId]
