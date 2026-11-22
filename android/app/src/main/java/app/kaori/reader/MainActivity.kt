@@ -145,7 +145,7 @@ private fun KaoriApp() {
         if (!settings.spoilerGuard) return "blokada wyłączona — widzi całą książkę"
         val total = b.chapters.sumOf { it.text.length }.coerceAtLeast(1)
         val ranges = progress[b.id]?.read.orEmpty()
-        if (ranges.isEmpty()) return "widzi to, co masz na ekranie"
+        if (ranges.isEmpty()) return "sees what is on your screen"
         val read = ranges.sumOf { it.last - it.first + 1 }.coerceAtMost(total)
         val pct = String.format(java.util.Locale.getDefault(), "%.1f", read * 100f / total)
         val pages = progress[b.id]?.pages ?: 0
@@ -334,7 +334,7 @@ private fun KaoriApp() {
             var refreshed = 0
             var failed = 0
             uris.forEachIndexed { i, u ->
-                importing = "Przetwarzam ${i + 1} / ${uris.size}"
+                importing = "Processing ${i + 1} / ${uris.size}"
                 val name = u.lastPathSegment?.substringAfterLast('/')?.substringAfterLast(':') ?: ""
                 val existing = byName[name]
                 val result = withContext(Dispatchers.IO) {
@@ -359,7 +359,7 @@ private fun KaoriApp() {
             error = when {
                 added == 0 && refreshed == 0 -> "Nothing could be processed (errors: $failed)"
                 else -> buildString {
-                    if (added > 0) append("Dodano $added")
+                    if (added > 0) append("Added $added")
                     if (refreshed > 0) {
                         if (isNotEmpty()) append(" · ")
                         append("refreshed $refreshed (illustrations)")
@@ -699,7 +699,7 @@ private fun ImportingScreen(p: KaoriPalette, status: String) {
     ) {
         Text(status, color = p.text, fontSize = 14.sp)
         Spacer(Modifier.height(8.dp))
-        Text("parsowanie EPUB", color = p.textDim, fontSize = 11.sp)
+        Text("EPUB parsing", color = p.textDim, fontSize = 11.sp)
     }
 }
 
@@ -838,7 +838,7 @@ private fun StatsScreen() {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("SERIE", color = p.textDim, fontSize = 10.sp, letterSpacing = 1.4.sp)
+        Text("SERIES", color = p.textDim, fontSize = 10.sp, letterSpacing = 1.4.sp)
         Spacer(Modifier.height(4.dp))
         StatRow(
             if (streak > 0) "$streak days in a row" else "No series",

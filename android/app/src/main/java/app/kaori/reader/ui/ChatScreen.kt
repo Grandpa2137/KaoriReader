@@ -276,7 +276,7 @@ fun ChatScreen(
                         .clickable { onOpenSettings() }
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Text("klucz API", color = p.accent, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                    Text("API key", color = p.accent, fontSize = 10.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -466,7 +466,7 @@ fun ChatScreen(
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "Pokazany jest koniec tekstu — to, co ma teraz na ekranie.",
+                            "Showing the end of the text — what is on your screen right now.",
                             color = p.textDim,
                             fontSize = 8.5.sp,
                         )

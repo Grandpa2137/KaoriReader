@@ -1236,7 +1236,7 @@ fun SettingsScreen(
                         .clickable { onExportBackup() }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Eksportuj", color = p.text, fontSize = 12.sp) }
+                ) { Text("Export", color = p.text, fontSize = 12.sp) }
                 Box(
                     Modifier
                         .weight(1f)
@@ -1245,7 +1245,7 @@ fun SettingsScreen(
                         .clickable { onImportBackup() }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Importuj", color = p.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                ) { Text("Import", color = p.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -1261,7 +1261,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Rozmawiasz z", color = p.textDim, fontSize = 10.sp)
+                    Text("Talking with", color = p.textDim, fontSize = 10.sp)
                     Text(personaName, color = p.text, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                 }
                 Text("Change ›", color = p.accent, fontSize = 11.sp)
@@ -1281,7 +1281,7 @@ fun SettingsScreen(
                     Text("Memory", color = p.textDim, fontSize = 10.sp)
                     Text(memoryInfo, color = p.text, fontSize = 12.sp)
                 }
-                Text("Podejrzyj ›", color = p.accent, fontSize = 11.sp)
+                Text("Review ›", color = p.accent, fontSize = 11.sp)
             }
 
             Row(
@@ -1289,7 +1289,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Tryb postaci", color = p.text, fontSize = 12.sp)
+                    Text("In-character mode", color = p.text, fontSize = 12.sp)
                     Text(
                         if (strictRole) "every reply in character, zero AI mentions"
                         else "the model may break character",
@@ -1334,7 +1334,7 @@ fun SettingsScreen(
                 value = url,
                 onValueChange = { url = it },
                 singleLine = true,
-                label = { Text("adres API", fontSize = 10.sp) },
+                label = { Text("API address", fontSize = 10.sp) },
                 textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -1355,10 +1355,10 @@ fun SettingsScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-            Text("KLUCZ API", color = p.textDim, fontSize = 10.sp, letterSpacing = 1.4.sp)
+            Text("API KEY", color = p.textDim, fontSize = 10.sp, letterSpacing = 1.4.sp)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Klucz trzymany tylko na tym telefonie. Bez niego czat nie odpowiada.",
+                "The key stays on this phone only. Without it the chat cannot answer.",
                 color = p.textDim,
                 fontSize = 9.sp,
                 lineHeight = 14.sp,

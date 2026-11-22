@@ -133,13 +133,13 @@ fun PersonaScreen(
                     Column(Modifier.weight(1f)) {
                         Text(persona.name, color = p.text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         Text(
-                            if (persona.builtin) "wbudowana · nieedytowalna"
+                            if (persona.builtin) "built-in · read-only"
                             else "custom · language: ${persona.language}",
                             color = p.textDim,
                             fontSize = 9.5.sp,
                         )
                     }
-                    if (on) Text("aktywna", color = p.accent, fontSize = 9.sp)
+                    if (on) Text("active", color = p.accent, fontSize = 9.sp)
                 }
             }
             item {
@@ -181,7 +181,7 @@ fun PersonaScreen(
                         }
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Zacznij od Kaori", color = p.textMuted, fontSize = 12.sp) }
+                ) { Text("Start from Kaori", color = p.textMuted, fontSize = 12.sp) }
             }
         }
     }
@@ -282,7 +282,7 @@ private fun PersonaEditor(
             Text("LANGUAGE", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("auto" to "jak on", "en" to "EN", "pl" to "PL", "ja" to "日本語").forEach { (id, label) ->
+                listOf("auto" to "same as him", "en" to "EN", "pl" to "PL", "ja" to "日本語").forEach { (id, label) ->
                     Box(
                         Modifier
                             .clip(RoundedCornerShape(9.dp))
@@ -300,7 +300,7 @@ private fun PersonaEditor(
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("ZBUDUJ Z OPISU", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
+            Text("BUILD FROM DESCRIPTION", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(6.dp))
             Text(
                 "Describe her in two sentences — I\'ll fill in \"how she talks\" and \"rules\". " +
@@ -361,7 +361,7 @@ private fun PersonaEditor(
             )
 
             Spacer(Modifier.height(14.dp))
-            Text("ZASADY (szablon)", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
+            Text("RULES (template)", color = p.textDim, fontSize = 9.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
                 value = rules,
