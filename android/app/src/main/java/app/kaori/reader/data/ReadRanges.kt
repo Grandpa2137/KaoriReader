@@ -15,7 +15,7 @@ object ReadRanges {
     /** Powyżej tylu przedziałów scalamy najciaśniejsze dziury — inaczej plik rośnie bez końca. */
     private const val MAX_RANGES = 400
 
-    /** Adde przeczytany kawałek [start, end) i zwraca nową, scaloną listę. */
+    /** Dodaje przeczytany kawałek [start, end) i zwraca nową, scaloną listę. */
     fun add(ranges: List<IntRange>, start: Int, end: Int): List<IntRange> {
         if (end <= start) return ranges
         val s = start
@@ -110,7 +110,7 @@ object ReadRanges {
     /**
      * Migracja: książki czytane przed wprowadzeniem zakresów dostają jeden
      * przedział „do dotychczasowej pozycji", żeby Kaori nie straciła nagle
-     * allgo, co już znają.
+     * tego, co już znają.
      */
     fun seedTo(book: Book, chapter: Int): List<IntRange> {
         if (book.chapters.isEmpty()) return emptyList()

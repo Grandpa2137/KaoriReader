@@ -542,7 +542,7 @@ object LibraryStore {
             }
             put("chapters", arr)
         }
-        File(dir(context), "${book.id}.json").writeText(obj.toString())
+        AtomicJson.write(File(dir(context), "${book.id}.json"), obj.toString())
 
         val metas = list(context).filterNot { it.id == book.id } + book.toMeta(src, if (hasCover) cover.absolutePath else "")
         writeIndex(context, metas.sortedBy { it.title.lowercase() })
@@ -570,7 +570,7 @@ object LibraryStore {
                     .put("cover", m.cover)
             )
         }
-        runCatching { indexPath(context).writeText(arr.toString()) }
+        runCatching { AtomicJson.write(indexPath(context), arr.toString()) }
     }
 
     private fun Book.toMeta(src: String = "", cover: String = "") =

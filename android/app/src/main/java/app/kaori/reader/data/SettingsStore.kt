@@ -60,7 +60,17 @@ class SettingsStore(private val context: Context) {
     suspend fun setFont(id: String) = put { it[Keys.font] = id }
     suspend fun setFontSize(v: Float) = put { it[Keys.fontSize] = v }
     suspend fun setScrollMode(v: Boolean) = put { it[Keys.scroll] = v }
-    suspend fun setApiKey(v: String) = put { it[Keys.apiKey] = SecureKey.encrypt(v.trim()) }
+    /** @return false, jeśli Keystore odmówił — wtedy w ustawieniach ma pojawić się błąd. */
+    suspend fun setApiKey(v: String): Boolean {
+        val plain = v.trim()
+        if (plain.isEmpty()) {
+            put { it[Keys.apiKey] = "" }
+            return true
+        }
+        val enc = SecureKey.encryptOrNull(plain) ?: return false
+        put { it[Keys.apiKey] = enc }
+        return true
+    }
     suspend fun setSpoilerGuard(v: Boolean) = put { it[Keys.spoiler] = v }
     suspend fun setBaseUrl(v: String) = put { it[Keys.baseUrl] = v.trim() }
     suspend fun setModel(v: String) = put { it[Keys.model] = v.trim() }

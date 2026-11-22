@@ -237,7 +237,7 @@ object Backup {
         }
         ProgressStore.save(ctx, meta.id, merged)
         all.remove(meta.src)
-        runCatching { file.writeText(all.toString()) }
+        runCatching { AtomicJson.write(file, all.toString()) }
     }
 
     private fun savePending(ctx: Context, pending: JSONObject) {
@@ -248,7 +248,7 @@ object Backup {
         }
         val old = runCatching { JSONObject(file.readText()) }.getOrNull() ?: JSONObject()
         pending.keys().forEach { old.put(it, pending.get(it)) }
-        runCatching { file.writeText(old.toString()) }
+        runCatching { AtomicJson.write(file, old.toString()) }
     }
 
     private fun readRanges(arr: JSONArray?): List<IntRange> {

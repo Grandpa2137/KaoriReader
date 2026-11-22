@@ -370,7 +370,7 @@ markdown, no summaries of what you are about to say. Just talk.
 
         // Cięcie 300 tys. znaków i sieć nie mogą dziać się na wątku głównym.
         return withContext(Dispatchers.IO) {
-            // Treść pages, którą właśnie podlinkował — dokładamy do OBU trybów.
+            // Treść strony, którą właśnie podlinkował — dokładamy do OBU trybów.
             fun appendWeb(sb: StringBuilder) {
                 if (webText.isBlank()) return
                 sb.appendLine("[PAGE THEY JUST LINKED]")
@@ -437,7 +437,7 @@ markdown, no summaries of what you are about to say. Just talk.
                 .put("temperature", if (strictRole) 1.1 else 1.0)
                 .put("top_p", if (strictRole) 0.95 else 1.0)
                 .put("max_tokens", 700)
-                .put("thinking", JSONObject().put("type", "disabled"))
+                .withThinking(config)
 
             val raw = post(config, apiKey, body.toString())
             // Gdyby odbiła znacznik czasu na początku — wycinamy TYLKO formę "(sent ...)"
@@ -479,12 +479,24 @@ markdown, no summaries of what you are about to say. Just talk.
                 )
                 .put("temperature", 0.3)
                 .put("max_tokens", 260)
-                .put("thinking", JSONObject().put("type", "disabled"))
+                .withThinking(config)
             val out = post(config, apiKey, body.toString())
             if (out.startsWith("Error") || out.startsWith("Can't")) "" else out.trim()
         }
     }
 
+
+    /**
+     * `thinking: disabled` to pole specyficzne dla DeepSeeka. OpenAI i inni nie muszą go znać,
+     * a ścisłe bramki potrafią odrzucić nieznane pole błędem 400 — więc wysyłamy je tylko tam,
+     * gdzie ma sens.
+     */
+    private fun JSONObject.withThinking(config: LlmConfig): JSONObject {
+        if (config.baseUrl.contains("deepseek", ignoreCase = true)) {
+            put("thinking", JSONObject().put("type", "disabled"))
+        }
+        return this
+    }
     /**
      * Gruby szacunek kosztu: ASCII to ~4 znaki na token, pismo CJK macha prawie 1:1.
      * Nie jest to licznik dostawcy, ale wystarcza, żeby powiedzieć użytkownikowi
@@ -528,7 +540,7 @@ markdown, no summaries of what you are about to say. Just talk.
                     )
                     .put("temperature", 0.2)
                     .put("max_tokens", 4000)
-                    .put("thinking", JSONObject().put("type", "disabled"))
+                    .withThinking(config)
                 val out = post(config, apiKey, body.toString())
                 if (out.startsWith("Error") || out.startsWith("Can't")) error(out)
                 if (done.isNotEmpty()) done.append("\n\n")
@@ -571,7 +583,7 @@ markdown, no summaries of what you are about to say. Just talk.
                 )
                 .put("temperature", 0.5)
                 .put("max_tokens", 700)
-                .put("thinking", JSONObject().put("type", "disabled"))
+                .withThinking(config)
             val raw = post(config, apiKey, body.toString())
             if (raw.startsWith("Error") || raw.startsWith("Can't")) error(raw)
             val start = raw.indexOf('{')
@@ -643,7 +655,7 @@ markdown, no summaries of what you are about to say. Just talk.
                 )
                 .put("temperature", 0.2)
                 .put("max_tokens", 500)
-                .put("thinking", JSONObject().put("type", "disabled"))
+                .withThinking(config)
             val raw = post(config, apiKey, body.toString())
             if (raw.startsWith("Error") || raw.startsWith("Can't")) error(raw)
             val start = raw.indexOf('{')
@@ -978,6 +990,8 @@ record does, not a person.
             .take(5)
     }
 
+    /** Twardy limit pobieranej strony — 2 MB tekstu to i tak za dużo na prompt. */
+    private const val MAX_PAGE_CHARS = 2_000_000
     private const val HISTORY_CHARS = 16_000
     private const val HISTORY_MIN = 8
 
@@ -1003,10 +1017,22 @@ record does, not a person.
             }
             val code = conn.responseCode
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-            val raw = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
+            // Limit: bez tego jeden wielki plik potrafi zjeść pamięć i tokeny.
+            val raw = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { reader ->
+                val sb = StringBuilder()
+                val buf = CharArray(16 * 1024)
+                var total = 0
+                while (total < MAX_PAGE_CHARS) {
+                    val read = reader.read(buf)
+                    if (read <= 0) break
+                    sb.append(buf, 0, read)
+                    total += read
+                }
+                sb.toString()
+            }
             conn.disconnect()
             if (code !in 200..299) return@runCatching ""
-            // Pages typu op.gg nie mają treści w HTML-u — pakują ją w JSON
+            // Strony typu op.gg nie mają treści w HTML-u — pakują ją w JSON
             // wewnątrz <script>. Bierzemy to, co daje więcej tekstu.
             val plain = htmlToText(raw).take(WEB_CHARS)
             if (plain.length >= 600) plain

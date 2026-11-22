@@ -55,7 +55,11 @@ object ProgressStore {
                     read = readFrom(o.optJSONArray("rr")),
                 )
             }
-        }.getOrDefault(emptyMap())
+        }.getOrElse {
+            // plik nie parsuje się: odkładamy go na bok, żeby nie nadpisać danych
+            AtomicJson.quarantine(f)
+            emptyMap()
+        }
     }
 
     /**
@@ -79,7 +83,7 @@ object ProgressStore {
                     .put("rr", readTo(v.read))
             )
         }
-        runCatching { file(context).writeText(obj.toString()) }
+        runCatching { AtomicJson.write(file(context), obj.toString()) }
     }
 
     fun save(context: Context, bookId: String, p: ReadingProgress) {
@@ -99,7 +103,7 @@ object ProgressStore {
                     .put("rr", readTo(v.read))
             )
         }
-        runCatching { file(context).writeText(obj.toString()) }
+        runCatching { AtomicJson.write(file(context), obj.toString()) }
     }
 
     fun forget(context: Context, bookId: String) {
@@ -114,7 +118,7 @@ object ProgressStore {
                     .put("rr", readTo(v.read))
             )
         }
-        runCatching { file(context).writeText(obj.toString()) }
+        runCatching { AtomicJson.write(file(context), obj.toString()) }
     }
 
     private fun readTo(ranges: List<IntRange>): JSONArray {
@@ -170,6 +174,6 @@ object CollectionsStore {
                     .put("books", JSONArray(c.bookIds))
             )
         }
-        runCatching { file(context).writeText(arr.toString()) }
+        runCatching { AtomicJson.write(file(context), arr.toString()) }
     }
 }

@@ -75,7 +75,7 @@ object PersonaStore {
                     .put("r", p.rules)
             )
         }
-        runCatching { file(ctx).writeText(arr.toString()) }
+        runCatching { AtomicJson.write(file(ctx), arr.toString()) }
     }
 
     fun upsert(ctx: Context, p: Persona) {
@@ -94,7 +94,7 @@ object PersonaStore {
     }
 
     fun setActive(ctx: Context, id: String) {
-        runCatching { File(ctx.filesDir, "persona_active.txt").writeText(id) }
+        runCatching { AtomicJson.write(File(ctx.filesDir, "persona_active.txt"), id) }
     }
 
     fun active(ctx: Context): Persona =

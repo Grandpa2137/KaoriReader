@@ -48,7 +48,7 @@ object StatsStore {
         all[day] = block(all[day] ?: DayStat())
         val obj = JSONObject()
         all.forEach { (d, s) -> obj.put(d, JSONObject().put("p", s.pages).put("m", s.minutes)) }
-        runCatching { file(context).writeText(obj.toString()) }
+        runCatching { AtomicJson.write(file(context), obj.toString()) }
     }
 
     /** Ile dni z rzędu (łącznie z today) było czytanie. */

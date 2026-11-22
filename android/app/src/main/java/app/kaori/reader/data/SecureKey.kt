@@ -40,8 +40,13 @@ object SecureKey {
         return gen.generateKey()
     }
 
-    /** Zwraca "enc:<base64(iv+cipher)>" albo pusty string, jeśli nie ma czego szyfrować. */
-    fun encrypt(plain: String): String {
+    /**
+     * Zwraca "enc:<base64(iv+cipher)>" albo `null`, gdy Keystore odmówi.
+     *
+     * Wcześniej błąd kończył się pustym stringiem, który trafiał do ustawień jako „brak klucza" —
+     * użytkownik widział tylko „Add your API key" i nie wiedział, że klucz się nie zapisał.
+     */
+    fun encryptOrNull(plain: String): String? {
         if (plain.isEmpty()) return ""
         return runCatching {
             val cipher = Cipher.getInstance(TRANSFORM)
@@ -52,7 +57,7 @@ object SecureKey {
             iv.copyInto(all)
             body.copyInto(all, iv.size)
             PREFIX + Base64.encodeToString(all, Base64.NO_WRAP)
-        }.getOrDefault("")
+        }.getOrNull()
     }
 
     /**

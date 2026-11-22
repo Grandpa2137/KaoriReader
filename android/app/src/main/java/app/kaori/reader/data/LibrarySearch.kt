@@ -33,7 +33,7 @@ object LibrarySearch {
         book.chapters.forEach { text.append(it.text).append('\n') }
         // Nagłówek + tekst w jednym pliku: czytanie całości to jedno otwarcie.
         val f = file(ctx, book.id)
-        f.writeText("$header\n$text")
+        AtomicJson.write(f, "$header\n$text")
         true
     }.getOrDefault(false)
 

@@ -1,5 +1,7 @@
 ﻿# KaoriReader
 
+![Android](https://github.com/Grandpa2137/KaoriReader/actions/workflows/android.yml/badge.svg)
+
 An Android EPUB reader with a companion who reads **with** you — and who is not allowed
 to spoil the book.
 
@@ -86,6 +88,9 @@ your phone.
 - memories are viewable and deletable one by one, or wiped entirely
 - translations are cached on the phone and can be cleared from Settings at any time
 - API keys encrypted with Android Keystore, `allowBackup=false`
+- every JSON store is written **atomically** (`tmp` + rename, previous version kept as `.bak`),
+  and a file that fails to parse is moved aside instead of being overwritten — a crash mid-save
+  cannot wipe your reading progress or the read-ranges the spoiler guard depends on
 
 ---
 

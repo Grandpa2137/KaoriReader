@@ -226,7 +226,9 @@ private fun KaoriApp() {
                         ?.readText()?.trim().orEmpty()
                 }.getOrDefault("")
             }
-            if (fromFile.isNotBlank()) store.setApiKey(fromFile)
+            if (fromFile.isNotBlank()) store.setApiKey(fromFile).let { ok ->
+            if (!ok) error = "Couldn't store the key in the Android Keystore."
+        }
         }
     }
 
@@ -712,7 +714,13 @@ private fun KaoriApp() {
                                     }
                                 },
                                 apiKey = settings.apiKey,
-                                onApiKey = { scope.launch { store.setApiKey(it) } },
+                                onApiKey = { value ->
+                scope.launch {
+                    if (!store.setApiKey(value)) {
+                        error = "Couldn't store the key in the Android Keystore. Try again."
+                    }
+                }
+            },
                                 spoilerGuard = settings.spoilerGuard,
                                 onSpoilerGuard = { scope.launch { store.setSpoilerGuard(it) } },
                                 onExportBackup = { backupSave.launch("kaori-backup.json") },

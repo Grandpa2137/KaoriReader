@@ -42,7 +42,7 @@ object ChatStore {
             m.imagePath?.let { o.put("i", it) }
             arr.put(o)
         }
-        runCatching { file(context, thread).writeText(arr.toString()) }
+        runCatching { AtomicJson.write(file(context, thread), arr.toString()) }
     }
 
     fun clear(context: Context, thread: String) {

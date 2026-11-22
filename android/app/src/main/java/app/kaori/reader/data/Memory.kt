@@ -73,13 +73,13 @@ object MemoryStore {
     fun saveFacts(ctx: Context, personaId: String, list: List<Fact>) = runCatching {
         val arr = JSONArray()
         list.forEach { arr.put(JSONObject().put("k", it.key).put("v", it.value).put("t", it.at)) }
-        factsFile(ctx, personaId).writeText(arr.toString())
+        AtomicJson.write(factsFile(ctx, personaId), arr.toString())
     }
 
     fun saveThreads(ctx: Context, personaId: String, list: List<Thread>) = runCatching {
         val arr = JSONArray()
         list.forEach { arr.put(JSONObject().put("t", it.topic).put("s", it.state).put("a", it.at)) }
-        threadsFile(ctx, personaId).writeText(arr.toString())
+        AtomicJson.write(threadsFile(ctx, personaId), arr.toString())
     }
 
     fun saveEpisodes(ctx: Context, personaId: String, list: List<Episode>) = runCatching {
@@ -93,7 +93,7 @@ object MemoryStore {
                     .put("k", JSONArray(e.keys))
             )
         }
-        episodesFile(ctx, personaId).writeText(arr.toString())
+        AtomicJson.write(episodesFile(ctx, personaId), arr.toString())
     }
 
     fun deleteFact(ctx: Context, personaId: String, key: String) =

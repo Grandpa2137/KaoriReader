@@ -46,7 +46,7 @@ object TranslationStore {
         val d = dir(ctx, bookId)
         runCatching {
             d.mkdirs()
-            file(ctx, bookId, lang, text).writeText(translation)
+            AtomicJson.write(file(ctx, bookId, lang, text), translation)
         }
         prune(ctx)
     }

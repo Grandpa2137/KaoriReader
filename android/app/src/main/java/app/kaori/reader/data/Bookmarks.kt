@@ -76,6 +76,6 @@ object BookmarksStore {
                     .put("sy", b.scrollY)
             )
         }
-        runCatching { file(context).writeText(arr.toString()) }
+        runCatching { AtomicJson.write(file(context), arr.toString()) }
     }
 }
