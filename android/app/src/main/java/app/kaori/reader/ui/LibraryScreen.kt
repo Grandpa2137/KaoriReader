@@ -93,6 +93,7 @@ fun LibraryScreen(
     var sort by remember { mutableStateOf(SortMode.Title) }
     var query by remember { mutableStateOf("") }
     var newCollectionDialog by remember { mutableStateOf(false) }
+    var addMenu by remember { mutableStateOf(false) }
     var renameCollection by remember { mutableStateOf<Collection?>(null) }
     // Zaznaczanie wielu książek: po imporcie 15 tomów nie klika się ich po kolei.
     var selecting by remember { mutableStateOf(false) }
@@ -203,7 +204,35 @@ fun LibraryScreen(
             Spacer(Modifier.weight(1f))
             // „Scan” wymagałby dostępu do wszystkich plików — publiczna wersja go nie ma.
             // + Add (SAF) robi to samo, bez żadnych uprawnień.
-            PillButton("+ Add", p, filled = true) { onAddBook() }
+            PillButton("+ Add", p, filled = true) { addMenu = true }
+        }
+
+        if (addMenu) {
+            AlertDialog(
+                onDismissRequest = { addMenu = false },
+                containerColor = p.uiBg,
+                title = { Text("Add books", fontSize = 15.sp) },
+                text = {
+                    Text(
+                        "Folder imports every .epub inside it — one tap for a whole library. " +
+                            "Files let you pick single books.",
+                        color = p.textMuted,
+                        fontSize = 11.sp,
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        addMenu = false
+                        onPickFolder()
+                    }) { Text("Folder") }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        addMenu = false
+                        onAddBook()
+                    }) { Text("Files") }
+                },
+            )
         }
 
         // Szukanie po tytule i autorze

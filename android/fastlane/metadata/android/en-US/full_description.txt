@@ -1,0 +1,30 @@
+An EPUB reader with a companion who reads with you — and is not allowed to spoil the book.
+
+No account. No server. No telemetry. Your books, your reading progress and your API key stay on your phone.
+
+READER
+- EPUB 2 and EPUB 3, illustrations shown where they belong
+- two modes: pages or continuous scroll, both survive chapter changes
+- library with collections, multi-select, folder import (one tap for a whole library)
+- full text search inside a book and across the whole library, jumping to the exact line
+- bookmarks with exact position
+- built-in text to speech: reads a page aloud and turns the page for you
+- five themes, three fonts, text size, spoiler-safe progress tracking
+
+COMPANION (bring your own key)
+- works with any OpenAI-compatible endpoint: OpenAI, DeepSeek, OpenRouter, Groq, or your own URL and model
+- she sees the book you are reading, reacts to it, argues about characters
+- SPOILER GUARD: she only receives the text you have actually read. Pages you skipped are never in her context, so she cannot leak them even if the model has seen the book during training
+- LOCAL MEMORY: facts, open threads and conversation summaries, stored on the device. No vector database, no embeddings, nothing leaves the phone except the model call you made
+- PERSONAS: Kaori, or duplicate her card and rewrite it, or describe your own character and let the model fill in how she talks and what she refuses to do
+- in-character mode: no "as an AI", no meta commentary, no bullet lists
+
+YOUR DATA
+- export and import a backup of progress, collections, bookmarks and stats (JSON)
+- memories are visible and deletable one by one, or wiped at once
+- API key encrypted with the Android Keystore, Android backup disabled
+
+GOOD TO KNOW
+- you need your own API key; the app itself is free and open source (MIT)
+- no books are shipped with the app — it opens what you give it
+- everything runs locally; there is no KaoriReader server to shut down

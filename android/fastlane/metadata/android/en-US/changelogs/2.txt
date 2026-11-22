@@ -1,0 +1,9 @@
+First public build.
+
+- EPUB 2/3 reader, pages or continuous scroll, illustrations in place
+- companion with a spoiler guard: she only receives the text you have actually read
+- local memory (facts, threads, summaries) kept on the device
+- personas: Kaori built in, or duplicate her card and rewrite it
+- bring your own API key (OpenAI, DeepSeek, OpenRouter, custom URL)
+- library-wide search with exact jump, bookmarks, TTS, backup export/import
+- 0.1.1: add books via file picker or whole folder in one tap

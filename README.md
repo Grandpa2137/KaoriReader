@@ -56,6 +56,17 @@ your phone.
 Updates work the same way: download the newer APK and install it over the old one —
 books, progress, collections and memory stay in place.
 
+### Automatic updates (Obtainium)
+
+[Obtainium](https://github.com/ImranR98/Obtainium) installs apps straight from a GitHub repo
+and tells you when a new release appears.
+
+1. Install Obtainium (its own APK is on its releases page).
+2. Add app → paste `https://github.com/Grandpa2137/KaoriReader` → Add.
+3. From then on every new `KaoriReader-x.y.z.apk` release shows up as an update.
+
+The file you already installed can stay — same signing key, so it updates in place.
+
 ---
 
 ## Build
@@ -119,5 +130,5 @@ by a human, while large parts of the code were written in pair-programming sessi
 with an AI assistant. If you find something that looks like it was written by a person
 who was having fun rather than following a spec — that is exactly what happened.
 
-The persona text of Kaori is original writing. No character art, no voice model and no
-book content is shipped with the app.
+The persona text of Kaori is original writing. The app ships no book content and no voice
+model, and it has no server of its own.
