@@ -21,6 +21,7 @@ captures/
 # Klucze i sekrety — NIGDY do repo
 *.jks
 *.keystore
+keystore.properties
 api_key.txt
 
 *.properties.bak
