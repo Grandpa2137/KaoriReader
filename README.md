@@ -39,7 +39,7 @@ your phone.
 
 ## Install (no PC, no cable)
 
-1. On your phone, open the **Releases** page of this repository.
+1. On your phone, open the **[latest release](https://github.com/Grandpa2137/KaoriReader/releases/latest)**.
 2. Download the latest `KaoriReader-<version>.apk`.
 3. Tap the downloaded file. Android will ask once to allow installs from this source —
    allow it for the browser you used, then tap **Install**.
