@@ -108,6 +108,17 @@ gradle assembleDebug --no-daemon
 
 `local.properties` with `sdk.dir=...` is required (or set `ANDROID_HOME`).
 
+Tests (no device, no network):
+
+```bash
+cd android
+./gradlew testReleaseUnitTest
+```
+
+The suite covers the two things that must not break: `ReadRanges` (the spoiler guard — ranges,
+merging, gaps, the 400-range cap and `textOf`) and `TextChunks` (token estimate and
+chapter splitting, so a long chapter is never cut in half).
+
 ---
 
 ## How the spoiler guard works

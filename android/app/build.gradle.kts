@@ -24,8 +24,8 @@ android {
         applicationId = "dev.kaori.reader"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.1.3"
+        versionCode = 5
+        versionName = "0.1.4"
     }
 
     buildFeatures {
@@ -80,4 +80,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // Testy czystej logiki (spoiler guard, dzielenie tekstu) — bez androida i bez sieci.
+    testImplementation("junit:junit:4.13.2")
 }

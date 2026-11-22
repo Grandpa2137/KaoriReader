@@ -490,40 +490,9 @@ markdown, no summaries of what you are about to say. Just talk.
      * Nie jest to licznik dostawcy, ale wystarcza, żeby powiedzieć użytkownikowi
      * „to weźmie mniej więcej tyle", zanim wyda pieniądze.
      */
-    fun estimateTokens(text: String): Int {
-        var ascii = 0
-        var wide = 0
-        for (ch in text) if (ch.code < 128) ascii++ else wide++
-        return ascii / 4 + wide + 1
-    }
+    fun estimateTokens(text: String): Int = TextChunks.estimateTokens(text)
 
-    /** Dzieli tekst na kawałki po akapitach; każdy <= ~6000 znaków. */
-    private fun chunks(text: String, limit: Int = 6000): List<String> {
-        val out = ArrayList<String>()
-        val sb = StringBuilder()
-        for (para in text.split("\n\n")) {
-            if (sb.isNotEmpty() && sb.length + para.length + 2 > limit) {
-                out.add(sb.toString())
-                sb.setLength(0)
-            }
-            if (para.length > limit) {
-                // pojedynczy moloch: tniemy po zdaniach, a jak i to nie wyjdzie — na twardo
-                var rest = para
-                while (rest.length > limit) {
-                    var cut = rest.lastIndexOf('.', limit)
-                    if (cut < limit / 2) cut = limit
-                    out.add(rest.substring(0, cut + 1).trim())
-                    rest = rest.substring(cut + 1)
-                }
-                if (rest.isNotBlank()) sb.append(rest).append("\n\n")
-                continue
-            }
-            if (sb.isNotEmpty()) sb.append("\n\n")
-            sb.append(para)
-        }
-        if (sb.isNotBlank()) out.add(sb.toString())
-        return out.ifEmpty { listOf(text) }
-    }
+    private fun chunks(text: String): List<String> = TextChunks.split(text)
 
     /**
      * Tłumaczenie kawałka tekstu — osobne wywołanie, bez persony i bez pamięci.
@@ -1144,7 +1113,14 @@ record does, not a person.
                 .getString("content")
                 .trim()
         } catch (e: Exception) {
-            "Can't connect: ${e.message ?: e::class.simpleName}"
+            val msg = e.message ?: e::class.simpleName ?: "unknown error"
+            // Android blokuje plain http — mówimy to wprost, zamiast zostawiać usera z zagadką.
+            if (msg.contains("Cleartext", ignoreCase = true)) {
+                "Can't connect: this address uses plain http. Android blocks it — use an " +
+                    "https:// endpoint (or your provider's https gateway)."
+            } else {
+                "Can't connect: $msg"
+            }
         } finally {
             conn.disconnect()
         }

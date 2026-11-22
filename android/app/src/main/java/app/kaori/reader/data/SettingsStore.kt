@@ -23,7 +23,7 @@ data class AppSettings(
     val spoilerGuard: Boolean = true,
     /** Adres API dostawcy (OpenAI-compatible) i nazwa modelu. */
     val baseUrl: String = "https://api.deepseek.com",
-    val model: String = "deepseek-flash",
+    val model: String = "deepseek-chat",
     /** Każda odpowiedź w roli, bez wzmianek o AI i meta-komentarza. */
     val strictRole: Boolean = true,
 )
@@ -51,7 +51,7 @@ class SettingsStore(private val context: Context) {
             apiKey = SecureKey.decrypt(p[Keys.apiKey] ?: ""),
             spoilerGuard = p[Keys.spoiler] ?: true,
             baseUrl = p[Keys.baseUrl] ?: "https://api.deepseek.com",
-            model = p[Keys.model] ?: "deepseek-flash",
+            model = p[Keys.model] ?: "deepseek-chat",
             strictRole = p[Keys.strict] ?: true,
         )
     }
