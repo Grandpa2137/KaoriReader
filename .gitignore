@@ -1,0 +1,35 @@
+﻿# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+build/
+.gradle/
+.kotlin/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Klucze i sekrety — NIGDY do repo
+*.jks
+*.keystore
+api_key.txt
+
+*.properties.bak
+
+# Książki i dane użytkowników
+*.epub
+*.mobi
+*.azw3
+
+
+# skrypty pomocnicze trzymamy poza repo
+tools/
