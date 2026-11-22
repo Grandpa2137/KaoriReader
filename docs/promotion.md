@@ -101,3 +101,13 @@ Do not post the same text everywhere on the same day; r/androidapps mods delete 
 looks like a campaign. Space them out, answer comments — comments are what keep a post visible.
 
 Numbers to watch: GitHub release asset `download_count` (API) is the only real metric.
+
+---
+
+## UWAGA (2026-11-23): IzzyOnDroid odpada
+
+IzzyOnDroid przeniósł zgłoszenia na Codeberg, a Codeberg w nowym ToS zabrania projektów
+"mostly consisting of code written by generative AI tools". KaoriReader jest oznaczony jako
+vibecoded, więc zgłoszenie tam to ryzyko dla konta. Szczegóły i plan B: `docs/izzyondroid.md`.
+Ścieżki, które zostają: Reddit, Show HN, Google Play, Aptoide/APKPure, Obtainium.
+
