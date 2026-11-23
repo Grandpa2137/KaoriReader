@@ -18,11 +18,9 @@ object ChatStore {
     private fun file(context: Context, thread: String) =
         File(dir(context), thread.replace(Regex("[^A-Za-z0-9_-]"), "_") + ".json")
 
-    fun load(context: Context, thread: String): List<ChatMessage> {
-        val f = file(context, thread)
-        if (!f.exists()) return emptyList()
-        return runCatching {
-            val arr = JSONArray(f.readText())
+    fun load(context: Context, thread: String): List<ChatMessage> =
+        AtomicJson.read(file(context, thread)) { text ->
+            val arr = JSONArray(text)
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
                 ChatMessage(
@@ -32,8 +30,7 @@ object ChatStore {
                     ts = o.optLong("t", 0L),
                 )
             }
-        }.getOrDefault(emptyList())
-    }
+        } ?: emptyList()
 
     fun save(context: Context, thread: String, messages: List<ChatMessage>) {
         val arr = JSONArray()

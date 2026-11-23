@@ -193,6 +193,8 @@ fun ChatScreen(
     }
 
     // Głos: rozpoznawanie mowy systemu (offline), wynik od razu idzie do Kaori.
+    // RecognizerIntent nagrywa systemowa aplikacja rozpoznawania mowy, więc NASZA apka
+    // nie potrzebuje RECORD_AUDIO — dlatego w manifeście go nie ma i nie ma o co pytać.
     val voiceLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { res ->
@@ -201,15 +203,10 @@ fun ChatScreen(
             ?.firstOrNull()
         if (!spoken.isNullOrBlank()) send(spoken)
     }
-    val askMicPermission = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted -> if (granted) voiceLauncher.launch(voiceIntent()) }
     val startVoice: () -> Unit = {
-        val granted = androidx.core.content.ContextCompat.checkSelfPermission(
-            ctx, android.Manifest.permission.RECORD_AUDIO
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        if (granted) voiceLauncher.launch(voiceIntent())
-        else askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO)
+        // Na telefonie bez syntezatora mowy (albo z wyłączonym) nie ma czego uruchomić
+        runCatching { voiceLauncher.launch(voiceIntent()) }
+            .onFailure { tokenNotice = "no speech recogniser on this phone" }
     }
 
     LaunchedEffect(threadId) {

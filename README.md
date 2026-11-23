@@ -88,9 +88,12 @@ your phone.
 - memories are viewable and deletable one by one, or wiped entirely
 - translations are cached on the phone and can be cleared from Settings at any time
 - API keys encrypted with Android Keystore, `allowBackup=false`
-- every JSON store is written **atomically** (`tmp` + rename, previous version kept as `.bak`),
-  and a file that fails to parse is moved aside instead of being overwritten — a crash mid-save
-  cannot wipe your reading progress or the read-ranges the spoiler guard depends on
+- every JSON store is written **atomically** (flushed to `tmp`, then renamed; the previous
+  version kept as `.bak`), and if a file will not parse the app **loads the `.bak` and repairs
+  the main file** before giving up — a crash mid-save cannot wipe your reading progress or the
+  read-ranges the spoiler guard depends on. Only if both copies are unreadable is the file
+  moved aside (`*.corrupt-<timestamp>`), never silently overwritten. Progress saves are
+  serialised, so two quick saves cannot overwrite each other.
 
 ---
 
@@ -144,10 +147,11 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite (39 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
+The suite (45 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
 ranges, merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
 chapter splitting, so a long chapter is never cut in half), and the data layer —
-`AtomicJson` (temp file + rename, `.bak` of the previous version), `ProgressStore`
+`AtomicJson` (temp file + rename, `.bak` of the previous version, recovery from `.bak` when the
+main file is broken, quarantine when both are), `ProgressStore`
 (corrupt JSON is set aside instead of being overwritten with an empty map),
 `TranslationStore` (cache keys, no leaking between books) and `Backup.readRanges`
 (what a restored backup is allowed to mark as read).

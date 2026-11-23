@@ -52,6 +52,25 @@ class ProgressStoreTest {
     }
 
     @Test
+    fun `corrupt file is restored from bak instead of losing everything`() {
+        ProgressStore.writeTo(file(), mapOf("book-1" to entry(2, listOf(0..50))))
+        // drugi zapis zostawia poprzednią wersję w .bak
+        ProgressStore.writeTo(file(), mapOf("book-1" to entry(3, listOf(0..99))))
+        file().writeText("{broken")
+
+        val loaded = ProgressStore.loadFrom(file())
+        assertEquals("postęp wraca z .bak", setOf("book-1"), loaded.keys)
+        assertEquals(2, loaded.getValue("book-1").chapter)
+        assertEquals(listOf(0..50), loaded.getValue("book-1").read)
+        assertEquals("plik główny naprawiony", 2, ProgressStore.loadFrom(file()).getValue("book-1").chapter)
+        assertEquals(
+            "nic nie poszło do kwarantanny",
+            0,
+            tmp.root.listFiles()!!.count { it.name.contains(".corrupt-") },
+        )
+    }
+
+    @Test
     fun `missing file is not an error`() {
         assertTrue(ProgressStore.loadFrom(File(tmp.root, "nothing-here.json")).isEmpty())
     }

@@ -21,17 +21,14 @@ object StatsStore {
     private fun today(): String =
         SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(Date())
 
-    fun load(context: Context): Map<String, DayStat> {
-        val f = file(context)
-        if (!f.exists()) return emptyMap()
-        return runCatching {
-            val days = JSONObject(f.readText())
+    fun load(context: Context): Map<String, DayStat> =
+        AtomicJson.read(file(context)) { text ->
+            val days = JSONObject(text)
             days.keys().asSequence().associateWith { k ->
                 val o = days.getJSONObject(k)
                 DayStat(o.optInt("p"), o.optInt("m"))
             }
-        }.getOrDefault(emptyMap())
-    }
+        } ?: emptyMap()
 
     fun addPages(context: Context, pages: Int) {
         if (pages <= 0) return

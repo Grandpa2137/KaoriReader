@@ -38,11 +38,9 @@ object PersonaStore {
 
     private fun file(ctx: Context) = File(ctx.filesDir, "personas.json")
 
-    fun load(ctx: Context): List<Persona> {
-        val f = file(ctx)
-        if (!f.exists()) return listOf(KAORI)
-        return runCatching {
-            val arr = JSONArray(f.readText())
+    fun load(ctx: Context): List<Persona> =
+        AtomicJson.read(file(ctx)) { text ->
+            val arr = JSONArray(text)
             val out = ArrayList<Persona>()
             for (i in 0 until arr.length()) {
                 val o = arr.optJSONObject(i) ?: continue
@@ -58,8 +56,7 @@ object PersonaStore {
                 )
             }
             listOf(KAORI) + out
-        }.getOrDefault(listOf(KAORI))
-    }
+        } ?: listOf(KAORI)
 
     /** Zapisuje własne postacie (Kaori pomijamy — jest wbudowana). */
     fun save(ctx: Context, all: List<Persona>) {

@@ -36,34 +36,37 @@ object MemoryStore {
 
     // ------------------------------------------------------------------ odczyt
 
-    fun facts(ctx: Context, personaId: String): List<Fact> = runCatching {
-        val arr = JSONArray(factsFile(ctx, personaId).readText())
-        (0 until arr.length()).mapNotNull { i ->
-            arr.optJSONObject(i)?.let {
-                Fact(it.optString("k"), it.optString("v"), it.optLong("t"))
-            }?.takeIf { f -> f.key.isNotBlank() && f.value.isNotBlank() }
-        }
-    }.getOrDefault(emptyList())
+    fun facts(ctx: Context, personaId: String): List<Fact> =
+        AtomicJson.read(factsFile(ctx, personaId)) { text ->
+            val arr = JSONArray(text)
+            (0 until arr.length()).mapNotNull { i ->
+                arr.optJSONObject(i)?.let {
+                    Fact(it.optString("k"), it.optString("v"), it.optLong("t"))
+                }?.takeIf { f -> f.key.isNotBlank() && f.value.isNotBlank() }
+            }
+        } ?: emptyList()
 
-    fun threads(ctx: Context, personaId: String): List<Thread> = runCatching {
-        val arr = JSONArray(threadsFile(ctx, personaId).readText())
-        (0 until arr.length()).mapNotNull { i ->
-            arr.optJSONObject(i)?.let {
-                Thread(it.optString("t"), it.optString("s"), it.optLong("a"))
-            }?.takeIf { t -> t.topic.isNotBlank() }
-        }
-    }.getOrDefault(emptyList())
+    fun threads(ctx: Context, personaId: String): List<Thread> =
+        AtomicJson.read(threadsFile(ctx, personaId)) { text ->
+            val arr = JSONArray(text)
+            (0 until arr.length()).mapNotNull { i ->
+                arr.optJSONObject(i)?.let {
+                    Thread(it.optString("t"), it.optString("s"), it.optLong("a"))
+                }?.takeIf { t -> t.topic.isNotBlank() }
+            }
+        } ?: emptyList()
 
-    fun episodes(ctx: Context, personaId: String): List<Episode> = runCatching {
-        val arr = JSONArray(episodesFile(ctx, personaId).readText())
-        (0 until arr.length()).mapNotNull { i ->
-            val o = arr.optJSONObject(i) ?: return@mapNotNull null
-            val keys = ArrayList<String>()
-            o.optJSONArray("k")?.let { a -> for (j in 0 until a.length()) keys += a.optString(j) }
-            Episode(o.optString("s"), o.optLong("t"), o.optInt("i", 2), keys)
-                .takeIf { it.summary.isNotBlank() }
-        }
-    }.getOrDefault(emptyList())
+    fun episodes(ctx: Context, personaId: String): List<Episode> =
+        AtomicJson.read(episodesFile(ctx, personaId)) { text ->
+            val arr = JSONArray(text)
+            (0 until arr.length()).mapNotNull { i ->
+                val o = arr.optJSONObject(i) ?: return@mapNotNull null
+                val keys = ArrayList<String>()
+                o.optJSONArray("k")?.let { a -> for (j in 0 until a.length()) keys += a.optString(j) }
+                Episode(o.optString("s"), o.optLong("t"), o.optInt("i", 2), keys)
+                    .takeIf { it.summary.isNotBlank() }
+            }
+        } ?: emptyList()
 
     fun counts(ctx: Context, personaId: String): Triple<Int, Int, Int> =
         Triple(facts(ctx, personaId).size, threads(ctx, personaId).size, episodes(ctx, personaId).size)

@@ -37,6 +37,10 @@ data class ReadingProgress(
 
 object ProgressStore {
 
+    // Zapis to zawsze „wczytaj cały plik, zmień jeden wpis, zapisz cały plik". Dwa wątki
+    // robiące to naraz nadpisywały się nawzajem, więc read-modify-write jest serializowane.
+    private val lock = Any()
+
     private fun file(context: Context) = File(context.filesDir, "progress.json")
 
     fun load(context: Context): Map<String, ReadingProgress> = loadFrom(file(context))
@@ -44,26 +48,25 @@ object ProgressStore {
     /**
      * Wczytanie z konkretnego pliku — wydzielone, żeby dało się to przetestować na JVM
      * (uszkodzony plik, poprawny plik, brak pliku) bez Androida.
+     *
+     * Przy uszkodzonym pliku sięgamy po `progress.json.bak` (poprzednia dobra wersja),
+     * a kwarantanna zostaje jako ostateczność.
      */
-    internal fun loadFrom(f: File): Map<String, ReadingProgress> {
-        if (!f.exists()) return emptyMap()
-        return runCatching {
-            val obj = JSONObject(f.readText())
-            obj.keys().asSequence().associateWith { key ->
-                val o = obj.getJSONObject(key)
-                ReadingProgress(
-                    chapter = o.optInt("c"),
-                    addr = o.optInt("a"),
-                    pages = o.optInt("n"),
-                    updated = o.optLong("t"),
-                    scrollOffset = o.optInt("so"),
-                    read = readFrom(o.optJSONArray("rr")),
-                )
-            }
-        }.getOrElse {
-            // plik nie parsuje się: odkładamy go na bok, żeby nie nadpisać danych
-            AtomicJson.quarantine(f)
-            emptyMap()
+    internal fun loadFrom(f: File): Map<String, ReadingProgress> =
+        AtomicJson.read(f) { text -> parseProgress(text) } ?: emptyMap()
+
+    private fun parseProgress(text: String): Map<String, ReadingProgress> {
+        val obj = JSONObject(text)
+        return obj.keys().asSequence().associateWith { key ->
+            val o = obj.getJSONObject(key)
+            ReadingProgress(
+                chapter = o.optInt("c"),
+                addr = o.optInt("a"),
+                pages = o.optInt("n"),
+                updated = o.optLong("t"),
+                scrollOffset = o.optInt("so"),
+                read = readFrom(o.optJSONArray("rr")),
+            )
         }
     }
 
@@ -72,10 +75,12 @@ object ProgressStore {
      * Bez scalania — inaczej nie dałoby się cofnąć oznaczenia.
      */
     fun setRead(context: Context, bookId: String, ranges: List<IntRange>) {
-        val all = load(context).toMutableMap()
-        val old = all[bookId] ?: return
-        all[bookId] = old.copy(read = ranges, updated = System.currentTimeMillis())
-        writeAll(context, all)
+        synchronized(lock) {
+            val all = load(context).toMutableMap()
+            val old = all[bookId] ?: return
+            all[bookId] = old.copy(read = ranges, updated = System.currentTimeMillis())
+            writeAll(context, all)
+        }
     }
 
     private fun writeAll(context: Context, all: Map<String, ReadingProgress>) =
@@ -96,38 +101,24 @@ object ProgressStore {
     }
 
     fun save(context: Context, bookId: String, p: ReadingProgress) {
-        val all = load(context).toMutableMap()
-        val old = all[bookId]
-        // nie nadpisuj świeższego wpisu
-        if (old != null && old.updated > p.updated) return
-        // Przeczytane zakresy tylko rosną — zwykły zapis pozycji nie może ich skasować.
-        val entry = if (old != null) p.copy(read = ReadRanges.union(old.read, p.read)) else p
-        all[bookId] = entry
-        val obj = JSONObject()
-        all.forEach { (k, v) ->
-            obj.put(
-                k,
-                JSONObject().put("c", v.chapter).put("a", v.addr).put("n", v.pages)
-                    .put("t", v.updated).put("so", v.scrollOffset)
-                    .put("rr", readTo(v.read))
-            )
+        synchronized(lock) {
+            val all = load(context).toMutableMap()
+            val old = all[bookId]
+            // nie nadpisuj świeższego wpisu
+            if (old != null && old.updated > p.updated) return
+            // Przeczytane zakresy tylko rosną — zwykły zapis pozycji nie może ich skasować.
+            val entry = if (old != null) p.copy(read = ReadRanges.union(old.read, p.read)) else p
+            all[bookId] = entry
+            writeAll(context, all)
         }
-        runCatching { AtomicJson.write(file(context), obj.toString()) }
     }
 
     fun forget(context: Context, bookId: String) {
-        val all = load(context).toMutableMap()
-        if (all.remove(bookId) == null) return
-        val obj = JSONObject()
-        all.forEach { (k, v) ->
-            obj.put(
-                k,
-                JSONObject().put("c", v.chapter).put("a", v.addr).put("n", v.pages)
-                    .put("t", v.updated).put("so", v.scrollOffset)
-                    .put("rr", readTo(v.read))
-            )
+        synchronized(lock) {
+            val all = load(context).toMutableMap()
+            if (all.remove(bookId) == null) return
+            writeAll(context, all)
         }
-        runCatching { AtomicJson.write(file(context), obj.toString()) }
     }
 
     private fun readTo(ranges: List<IntRange>): JSONArray {
@@ -156,11 +147,9 @@ object CollectionsStore {
 
     private fun file(context: Context) = File(context.filesDir, "collections.json")
 
-    fun load(context: Context): List<Collection> {
-        val f = file(context)
-        if (!f.exists()) return emptyList()
-        return runCatching {
-            val arr = JSONArray(f.readText())
+    fun load(context: Context): List<Collection> =
+        AtomicJson.read(file(context)) { text ->
+            val arr = JSONArray(text)
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
                 val ids = o.optJSONArray("books") ?: JSONArray()
@@ -170,8 +159,7 @@ object CollectionsStore {
                     bookIds = (0 until ids.length()).map { ids.getString(it) },
                 )
             }
-        }.getOrDefault(emptyList())
-    }
+        } ?: emptyList()
 
     fun save(context: Context, list: List<Collection>) {
         val arr = JSONArray()

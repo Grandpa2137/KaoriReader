@@ -1,0 +1,12 @@
+0.2.2
+
+- Microphone in the chat works again: it no longer asks for a
+  permission the app does not declare (it never needed it, the
+  system speech app does the recording).
+- Writes are flushed to disk before the swap, so a power loss
+  cannot leave an empty file.
+- A damaged data file is restored from its .bak copy instead of
+  showing an empty library.
+- Progress saves are serialised, so two quick saves cannot
+  overwrite each other.
+- 45 unit tests, up from 39.

@@ -28,11 +28,10 @@ object BookmarksStore {
 
     private val lock = Any()
 
-    fun load(context: Context): List<Bookmark> {
-        val f = file(context)
-        if (!f.exists()) return emptyList()
-        return runCatching {
-            val arr = JSONArray(f.readText())
+    fun load(context: Context): List<Bookmark> =
+        // przy uszkodzonym pliku AtomicJson sięga po bookmarks.json.bak
+        AtomicJson.read(file(context)) { text ->
+            val arr = JSONArray(text)
             (0 until arr.length()).mapNotNull { i ->
                 val o = arr.optJSONObject(i) ?: return@mapNotNull null
                 Bookmark(
@@ -45,8 +44,7 @@ object BookmarksStore {
                     scrollY = o.optInt("sy", 0),
                 )
             }
-        }.getOrDefault(emptyList())
-    }
+        } ?: emptyList()
 
     fun forBook(context: Context, bookId: String): List<Bookmark> = synchronized(lock) {
         load(context)
