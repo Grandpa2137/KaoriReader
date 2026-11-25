@@ -116,6 +116,34 @@ object ReadRanges {
         return if (max > 0) out.takeLast(max) else out
     }
 
+    /**
+     * Ilustracje „widoczne" — DOKŁADNIE ta sama reguła, co przy tekście (`visibleText`):
+     *  - blokada wyłączona → cała książka,
+     *  - są przeczytane zakresy → tylko obrazki, które w nich leżą,
+     *  - brak zakresów (książka sprzed migracji) → rozdziały 0..bieżący.
+     *
+     * Jedno miejsce decyduje o obu rzeczach, więc tekst i obrazki nie mogą się rozjechać:
+     * model nie dostanie obrazka bez tekstu ani tekstu bez obrazka z innej reguły.
+     */
+    fun imagesVisible(
+        book: Book,
+        ranges: List<IntRange>,
+        max: Int = 2,
+        guard: Boolean = true,
+        legacyChapter: Int = 0,
+    ): List<String> {
+        if (book.chapters.isEmpty()) return emptyList()
+        if (!guard) return chapterImages(book, book.chapters.lastIndex, max)
+        if (ranges.isNotEmpty()) return imagesIn(book, ranges, max)
+        return chapterImages(book, legacyChapter.coerceIn(0, book.chapters.lastIndex), max)
+    }
+
+    /** Obrazki z rozdziałów 0..[upTo] — ścieżka awaryjna i tryb bez blokady. */
+    private fun chapterImages(book: Book, upTo: Int, max: Int): List<String> =
+        (0..upTo)
+            .flatMap { i -> book.chapters[i].images.sortedBy { it.offset }.map { it.path } }
+            .let { if (max > 0) it.takeLast(max) else it }
+
     /** Offsety pierwszego znaku każdego rozdziału — do przeliczania pozycji. */
     fun chapterStarts(book: Book): IntArray {
         val out = IntArray(book.chapters.size + 1)

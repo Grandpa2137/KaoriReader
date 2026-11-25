@@ -69,4 +69,39 @@ class ImageSpoilerTest {
         )
         assertTrue(ReadRanges.imagesIn(book(), emptyList(), max = 5).isEmpty())
     }
+
+    @Test
+    fun `guard off means the whole book, like the text`() {
+        assertEquals(
+            listOf("/img/ch1-1.jpg", "/img/ch2-1.jpg", "/img/ch3-1.jpg"),
+            ReadRanges.imagesVisible(book(), ranges = emptyList(), max = 5, guard = false, legacyChapter = 0),
+        )
+    }
+
+    @Test
+    fun `no ranges yet falls back to the current chapter, exactly like visibleText`() {
+        // Stara książka: postęp jest, zakresów nie ma. Tekst idzie do bieżącego rozdziału,
+        // więc obrazki też — ani więcej, ani mniej.
+        assertEquals(
+            listOf("/img/ch1-1.jpg"),
+            ReadRanges.imagesVisible(book(), ranges = emptyList(), max = 5, guard = true, legacyChapter = 0),
+        )
+        assertEquals(
+            listOf("/img/ch1-1.jpg", "/img/ch2-1.jpg"),
+            ReadRanges.imagesVisible(book(), ranges = emptyList(), max = 5, guard = true, legacyChapter = 1),
+        )
+        assertEquals(
+            listOf("/img/ch1-1.jpg", "/img/ch2-1.jpg", "/img/ch3-1.jpg"),
+            ReadRanges.imagesVisible(book(), ranges = emptyList(), max = 5, guard = true, legacyChapter = 99),
+        )
+    }
+
+    @Test
+    fun `ranges win over the chapter fallback`() {
+        // Zakresy są, więc decydują one — nawet gdy bieżący rozdział jest dalej.
+        assertEquals(
+            listOf("/img/ch1-1.jpg"),
+            ReadRanges.imagesVisible(book(), ranges = listOf(0..99), max = 5, guard = true, legacyChapter = 2),
+        )
+    }
 }

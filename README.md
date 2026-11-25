@@ -161,7 +161,7 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite (55 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
+The suite (64 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
 ranges, merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
 chapter splitting, so a long chapter is never cut in half), `Endpoints` (https everywhere,
 plain http only on private hosts — including the ranges just outside the private blocks),
@@ -169,7 +169,9 @@ plain http only on private hosts — including the ranges just outside the priva
 `AtomicJson` (temp file + rename, `.bak` of the previous version, recovery from `.bak` when the
 main file is broken, quarantine when both are), `ProgressStore`
 (corrupt JSON is set aside instead of being overwritten with an empty map),
-`TranslationStore` (cache keys, no leaking between books) and `Backup.readRanges`
+`TranslationStore` (cache keys, no leaking between books), `imagesVisible`
+(illustrations obey the same rule as the text: guard off → whole book, read ranges → only what
+sits inside them, no ranges yet → up to the current chapter) and `Backup.readRanges`
 (what a restored backup is allowed to mark as read).
 
 ---
@@ -183,7 +185,10 @@ The app never asks the model to "please not spoil". It simply does not send the 
 2. Those ranges are merged into a per-book set of read ranges.
 3. When you write to the companion, she gets only the text from those ranges — **and only the
    illustrations that sit inside them**. An image from a chapter you skipped, or from a page
-   below your current position, is never attached.
+   below your current position, is never attached. Text and images are decided by one function
+   (`ReadRanges.imagesVisible`), so the two can never drift apart: turn the guard off and she
+   gets the whole book including the pictures; on a book from before read ranges existed, both
+   fall back to "everything up to the chapter you are in".
 4. Memories never store plot — only durable facts about you — so a summary of chapter 30
    cannot leak at chapter 2.
 

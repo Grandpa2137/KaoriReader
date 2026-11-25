@@ -202,19 +202,14 @@ private fun KaoriApp() {
     /** Ostatnie ilustracje z przeczytanej części — Kaori ma je zobaczyć, ale nie te z dalszej części. */
     fun visibleImages(max: Int = 2): List<String> {
         val book = current ?: return emptyList()
-        if (book.chapters.isEmpty()) return emptyList()
-        // Blokada wyłączona: wolno jej widzieć całą książkę.
-        if (!settings.spoilerGuard) {
-            return book.chapters.flatMap { ch -> ch.images.sortedBy { it.offset }.map { it.path } }
-                .takeLast(max)
-        }
-        val ranges = progress[book.id]?.read.orEmpty()
-        if (ranges.isNotEmpty()) return ReadRanges.imagesIn(book, ranges, max)
-        // Książka sprzed zakresów — jak visibleText(): tylko do bieżącego rozdziału.
-        val idx = chapter.coerceIn(0, book.chapters.lastIndex)
-        return (0..idx)
-            .flatMap { i -> book.chapters[i].images.sortedBy { it.offset }.map { it.path } }
-            .takeLast(max)
+        // Reguła siedzi w ReadRanges.imagesVisible — ta sama, co dla tekstu.
+        return ReadRanges.imagesVisible(
+            book = book,
+            ranges = progress[book.id]?.read.orEmpty(),
+            max = max,
+            guard = settings.spoilerGuard,
+            legacyChapter = chapter,
+        )
     }
 
     LaunchedEffect(Unit) {

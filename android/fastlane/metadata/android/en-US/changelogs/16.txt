@@ -1,0 +1,9 @@
+0.2.6
+
+- No behaviour change. One function (ReadRanges.imagesVisible) now
+  decides which illustrations the companion receives, using exactly
+  the rule the text already used: guard off means the whole book,
+  read ranges mean only the images inside them, and a book from
+  before ranges existed falls back to the chapter you are in.
+- Four new tests cover those three cases plus "ranges win over the
+  fallback", so text and pictures cannot drift apart again.
