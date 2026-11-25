@@ -43,6 +43,12 @@ your phone.
 - **home-screen shortcut** from Settings, pointing straight at the app
 
 **Companion (bring your own key)**
+
+![Kaori answering a question about the page you are on](docs/demo-chat.gif)
+
+*She reads with you: the question is about a page already read, and the answer comes from that
+text. Nothing sped up — that is her typing, on a real phone.*
+
 - any OpenAI-compatible endpoint: OpenAI, OpenRouter, DeepSeek, Groq, or your own URL —
   **including a server on your own network over plain http** (`localhost`, `10.x`, `192.168.x`,
   `172.16–31.x`, `*.local`), which is everything a local LM Studio / Ollama / LocalAI needs.
