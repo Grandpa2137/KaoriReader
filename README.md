@@ -10,6 +10,10 @@ to spoil the book.
 No account, no server, no telemetry. Your books, your progress and your API key stay on
 your phone.
 
+![Library, page turns and smooth scrolling](docs/demo.gif)
+
+*Twelve seconds, nothing sped up: the library, a page turn, then scroll mode.*
+
 | Library | Reader |
 |---|---|
 | ![Library](docs/screens/library.png) | ![Reader](docs/screens/reader.png) |
