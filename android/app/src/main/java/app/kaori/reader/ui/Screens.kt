@@ -1498,6 +1498,8 @@ fun SettingsScreen(
     baseUrl: String,
     model: String,
     onModelConfig: (String, String) -> Unit,
+    thinking: Boolean = true,
+    onThinking: (Boolean) -> Unit = {},
     translationInfo: String = "",
     onClearTranslations: () -> Unit = {},
 ) {
@@ -1825,6 +1827,33 @@ fun SettingsScreen(
                 Spacer(Modifier.width(8.dp))
                 ModeChip("Save", url != baseUrl || mdl != model, p) {
                     onModelConfig(url, mdl)
+                }
+            }
+
+            // Przełącznik pokazujemy tylko tam, gdzie da się go użyć — na OpenAI i reszcie
+            // nie ma czego przełączać i nie chcemy obiecywać funkcji, której nie ma.
+            if (app.kaori.reader.data.LlmConfig(baseUrl = baseUrl).supportsThinking) {
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Think before answering", color = p.text, fontSize = 12.sp)
+                        Text(
+                            if (thinking) {
+                                "she reasons first — fewer invented times and numbers, more tokens on your key"
+                            } else {
+                                "off — fastest and cheapest, but she will guess more"
+                            },
+                            color = p.textDim,
+                            fontSize = 10.sp,
+                            lineHeight = 14.sp,
+                        )
+                    }
+                    ModeChip("On", thinking, p) { onThinking(true) }
+                    Spacer(Modifier.width(6.dp))
+                    ModeChip("Off", !thinking, p) { onThinking(false) }
                 }
             }
 

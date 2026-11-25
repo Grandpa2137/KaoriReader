@@ -113,7 +113,7 @@ private fun KaoriApp() {
     var showMemory by remember { mutableStateOf(false) }
     var personaTick by remember { mutableStateOf(0) }
     val persona = remember(personaTick) { PersonaStore.active(ctx) }
-    val llm = LlmConfig(settings.baseUrl, settings.model)
+    val llm = LlmConfig(settings.baseUrl, settings.model, settings.thinking)
 
     // Wyjście z czytnika: jeśli czytamy przetłumaczony rozdział, wracamy do oryginału.
     val closeReader: () -> Unit = {
@@ -756,6 +756,8 @@ private fun KaoriApp() {
                                         store.setModel(m)
                                     }
                                 },
+                                thinking = settings.thinking,
+                                onThinking = { scope.launch { store.setThinking(it) } },
                             )
                         }
                     }

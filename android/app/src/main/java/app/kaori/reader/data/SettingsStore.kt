@@ -26,6 +26,8 @@ data class AppSettings(
     val model: String = "deepseek-chat",
     /** Każda odpowiedź w roli, bez wzmianek o AI i meta-komentarza. */
     val strictRole: Boolean = true,
+    /** Czy model ma się zastanowić przed odpowiedzią (działa tam, gdzie da się włączyć). */
+    val thinking: Boolean = true,
 )
 
 class SettingsStore(private val context: Context) {
@@ -40,6 +42,7 @@ class SettingsStore(private val context: Context) {
         val baseUrl = stringPreferencesKey("llm_base_url")
         val model = stringPreferencesKey("llm_model")
         val strict = androidx.datastore.preferences.core.booleanPreferencesKey("strict_role")
+        val thinking = androidx.datastore.preferences.core.booleanPreferencesKey("llm_thinking")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -53,6 +56,7 @@ class SettingsStore(private val context: Context) {
             baseUrl = p[Keys.baseUrl] ?: "https://api.deepseek.com",
             model = p[Keys.model] ?: "deepseek-chat",
             strictRole = p[Keys.strict] ?: true,
+            thinking = p[Keys.thinking] ?: true,
         )
     }
 
@@ -75,6 +79,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setBaseUrl(v: String) = put { it[Keys.baseUrl] = v.trim() }
     suspend fun setModel(v: String) = put { it[Keys.model] = v.trim() }
     suspend fun setStrictRole(v: Boolean) = put { it[Keys.strict] = v }
+    suspend fun setThinking(v: Boolean) = put { it[Keys.thinking] = v }
 
     private suspend fun put(block: (MutablePreferences) -> Unit) {
         context.dataStore.edit(block)

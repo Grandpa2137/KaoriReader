@@ -27,7 +27,16 @@ data class ChatMessage(
 data class LlmConfig(
     val baseUrl: String = "https://api.deepseek.com",
     val model: String = "deepseek-flash",
+    /** Czy model ma się zastanowić przed odpowiedzią (tylko tam, gdzie da się to włączyć). */
+    val thinking: Boolean = true,
 ) {
+    /**
+     * Czy dostawca umie włączyć rozumowanie. Dziś tylko DeepSeek ma na to pole —
+     * dlatego przełącznik w Ustawieniach pokazujemy wyłącznie wtedy, gdy ma sens.
+     */
+    val supportsThinking: Boolean
+        get() = baseUrl.contains("deepseek", ignoreCase = true)
+
     /** Użytkownik może podać bazę albo cały URL — oba warianty mają działać. */
     val endpoint: String
         get() {
@@ -456,8 +465,9 @@ markdown, no summaries of what you are about to say. Just talk.
                 .put("top_p", if (strictRole) 0.95 else 1.0)
                 .put("max_tokens", 700)
                 // Tu model ma się zastanowić, zanim odpowie: stąd biorą się zmyślone
-                // godziny i „od 17 minut”, których nikt nie policzył.
-                .withThinking(config, enabled = true)
+                // godziny i „od 17 minut”, których nikt nie policzył. Przełącznik
+                // w Ustawieniach może to wyłączyć (taniej, ale więcej zgadywania).
+                .withThinking(config, allowReasoning = true)
 
             val raw = post(config, apiKey, body.toString())
             // Gdyby odbiła znacznik czasu na początku — wycinamy TYLKO formę "(sent ...)"
@@ -512,9 +522,11 @@ markdown, no summaries of what you are about to say. Just talk.
      * gdzie ma sens. Rozumowanie włączamy tylko wtedy, gdy model ma się zastanowić
      * (zwykła rozmowa) — tłumaczenie i streszczenia mają być tanie i szybkie.
      */
-    private fun JSONObject.withThinking(config: LlmConfig, enabled: Boolean = false): JSONObject {
-        if (config.baseUrl.contains("deepseek", ignoreCase = true)) {
-            put("thinking", JSONObject().put("type", if (enabled) "enabled" else "disabled"))
+    private fun JSONObject.withThinking(config: LlmConfig, allowReasoning: Boolean = false): JSONObject {
+        if (config.supportsThinking) {
+            // Przełącznik w Ustawieniach może wyłączyć myślenie nawet tam, gdzie jest dostępne.
+            val on = allowReasoning && config.thinking
+            put("thinking", JSONObject().put("type", if (on) "enabled" else "disabled"))
         }
         return this
     }
