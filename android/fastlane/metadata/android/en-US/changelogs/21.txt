@@ -1,0 +1,8 @@
+0.2.11
+
+- First run: one card explaining what an API key is, where to get
+  one, what it costs and how to keep it safe. Shown once.
+- Settings -> API KEY: the same explanation, plus "Test connection"
+  which answers in a second whether the key works - and says which
+  problem it is (rejected key, no credit, wrong model, rate limit).
+- Steps are provider-agnostic, because those panels get redesigned.

@@ -66,6 +66,7 @@ import app.kaori.reader.ui.MemoryScreen
 import app.kaori.reader.ui.PersonaScreen
 import app.kaori.reader.ui.ReaderScreen
 import app.kaori.reader.ui.SettingsScreen
+import app.kaori.reader.ui.WelcomeDialog
 import app.kaori.reader.ui.pinAppShortcut
 import app.kaori.reader.ui.theme.KaoriPalette
 import app.kaori.reader.ui.theme.KaoriTheme
@@ -778,6 +779,18 @@ private fun KaoriApp() {
                 ) {
                     Text(msg, color = p.text, fontSize = 11.sp)
                 }
+            }
+
+            // Pierwsze uruchomienie: jedna kartka, co trzeba ustawić i czego apka nie zrobi.
+            // Pokazuje się raz — potem nie zawraca głowy.
+            if (!settings.welcomeSeen) {
+                WelcomeDialog(
+                    onOpenSettings = {
+                        scope.launch { store.setWelcomeSeen(true) }
+                        tab = 3
+                    },
+                    onDismiss = { scope.launch { store.setWelcomeSeen(true) } },
+                )
             }
         }
     }

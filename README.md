@@ -145,6 +145,38 @@ The file you already installed can stay — same signing key, so it updates in p
 
 ---
 
+## The one thing you have to set up: an API key
+
+The reading part works the moment you install it. **Talking to her does not** — she is not
+bundled and there is no server of mine behind her. You point the app at an AI provider and use
+your own key. Here is what that means, in plain words. (The app shows a shorter version of this
+once, on first launch, and again in Settings → API KEY.)
+
+**What a key is.** A long string that works like a password to an AI service — usually starting
+with `sk-`, something like `sk-1a2b3c4d…`. The app uses it to send your messages to the model
+**on your behalf**. There is no account in this app and nothing to sign up for here.
+
+**Where to get one.** Sign up with a provider — DeepSeek, OpenRouter, OpenAI, or any
+OpenAI-compatible service — open their **API keys** (sometimes *API tokens*) page, create a key
+and copy it. Those panels get redesigned all the time, so I deliberately do not walk through
+someone else's website step by step: look for "API keys" and a "Create" button.
+For a cheap start: `platform.deepseek.com`, sign up, top up, API keys → create.
+
+**What it costs.** Per use, not a subscription. One message is a fraction of a cent; a whole
+evening of chatting is usually less than a coffee. **About $5 of credit is plenty to start** —
+that is what I keep on my own account and top up when it runs low.
+
+**Keep it safe.** Never show it to anyone, never paste it into a chat, an issue or a screenshot.
+If your provider lets you set a **spending limit**, set one — that caps the damage of a leaked
+key. Here it is encrypted with the Android Keystore, backups are disabled, and it leaves the
+phone only inside the requests you make to that provider.
+
+**Check it before you need it.** Settings → API KEY → **Test connection** sends one minimal
+request and tells you what happened: works, key rejected, no credit on the account, wrong model
+name, or rate limited. A whole class of "it does not work" becomes one sentence.
+
+---
+
 ## Build
 
 ```bash

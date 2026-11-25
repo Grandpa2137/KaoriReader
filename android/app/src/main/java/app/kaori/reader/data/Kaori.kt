@@ -548,6 +548,35 @@ first — one short beat, then your line — and stay in the place he set. Never
      * gdzie ma sens. Rozumowanie włączamy tylko wtedy, gdy model ma się zastanowić
      * (zwykła rozmowa) — tłumaczenie i streszczenia mają być tanie i szybkie.
      */
+    /**
+     * Szybki test klucza: jedno minimalne zapytanie. Ma odpowiedzieć „działa / nie działa"
+     * bez czekania na pierwszą prawdziwą rozmowę i bez zaglądania w logi.
+     */
+    suspend fun testConnection(apiKey: String, config: LlmConfig): String = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) return@withContext "Add your key first — the field above is empty."
+        val body = JSONObject()
+            .put("model", config.model)
+            .put(
+                "messages",
+                JSONArray().put(JSONObject().put("role", "user").put("content", "ping")),
+            )
+            .put("max_tokens", 1)
+            .withThinking(config, allowReasoning = false)
+        val out = post(config, apiKey, body.toString())
+        when {
+            out.startsWith("Can't connect") -> out
+            out.contains("(401") || out.contains("Unauthorized") ->
+                "Key rejected by the provider (401). Copy it again — a missing character is enough."
+            out.contains("(402") || out.contains("Insufficient") || out.contains("balance") ->
+                "The key works, but there is no credit on that account."
+            out.contains("(404") ->
+                "Address or model not found (404). Check the API address and the model name."
+            out.contains("(429") -> "Rate limited (429). The key works, wait a moment."
+            out.startsWith("API error") -> out
+            else -> "Connected · ${config.model}"
+        }
+    }
+
     private fun JSONObject.withThinking(config: LlmConfig, allowReasoning: Boolean = false): JSONObject {
         if (config.supportsThinking) {
             // Przełącznik w Ustawieniach może wyłączyć myślenie nawet tam, gdzie jest dostępne.

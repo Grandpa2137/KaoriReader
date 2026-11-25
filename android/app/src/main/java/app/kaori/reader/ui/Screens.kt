@@ -1866,6 +1866,67 @@ fun SettingsScreen(
                 fontSize = 9.sp,
                 lineHeight = 14.sp,
             )
+            Spacer(Modifier.height(5.dp))
+            var showKeyHelp by remember { mutableStateOf(false) }
+            Text(
+                "First time? What a key is and where to get one ›",
+                color = p.accent,
+                fontSize = 9.5.sp,
+                modifier = Modifier.clickable { showKeyHelp = true },
+            )
+            if (showKeyHelp) {
+                AlertDialog(
+                    onDismissRequest = { showKeyHelp = false },
+                    containerColor = p.uiBg,
+                    title = { Text("What is an API key?", fontSize = 15.sp) },
+                    text = {
+                        Column {
+                            Text(
+                                "A long string that works like a password to an AI service. This app " +
+                                    "uses it to send your messages to the model on your behalf — there is " +
+                                    "no account here and nothing to sign up for.",
+                                color = p.text, fontSize = 11.sp, lineHeight = 16.sp,
+                            )
+                            Spacer(Modifier.height(9.dp))
+                            Text(
+                                "WHERE TO GET ONE\n" +
+                                    "Sign up with a provider — DeepSeek, OpenRouter, OpenAI, or any " +
+                                    "OpenAI-compatible service — then open their API keys page, create a " +
+                                    "key and copy it. Panels get redesigned, so look for \"API keys\" or " +
+                                    "\"API tokens\" and a button that says \"Create\". For DeepSeek the " +
+                                    "cheap default: platform.deepseek.com → API keys → create → copy.",
+                                color = p.text, fontSize = 10.5.sp, lineHeight = 15.sp,
+                            )
+                            Spacer(Modifier.height(9.dp))
+                            Text(
+                                "WHAT IT COSTS\n" +
+                                    "Per use, not a subscription. A few dollars up front lasts a long " +
+                                    "time — one message is a fraction of a cent, a whole evening less than " +
+                                    "a coffee. I keep about $5 of credit and top it up when it runs low.",
+                                color = p.text, fontSize = 10.5.sp, lineHeight = 15.sp,
+                            )
+                            Spacer(Modifier.height(9.dp))
+                            Text(
+                                "KEEP IT SAFE\n" +
+                                    "Never show it to anyone, never paste it into a chat, an issue or a " +
+                                    "screenshot. If the provider lets you set a spending limit, set one. " +
+                                    "Here it is encrypted with the Android Keystore, backups are off, and " +
+                                    "it leaves the phone only inside the requests you make to that provider.",
+                                color = p.textMuted, fontSize = 10.5.sp, lineHeight = 15.sp,
+                            )
+                            Spacer(Modifier.height(9.dp))
+                            Text(
+                                "Paste it below and tap Test connection — you will know in a second " +
+                                    "whether it works, instead of finding out mid-conversation.",
+                                color = p.accent, fontSize = 10.sp, lineHeight = 15.sp,
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showKeyHelp = false }) { Text("Got it") }
+                    },
+                )
+            }
             Spacer(Modifier.height(10.dp))
             var key by remember { mutableStateOf(apiKey) }
             // Klucz nie ma prawa wisieć na ekranie w całości — telefon bywa pokazywany.
@@ -1895,6 +1956,110 @@ fun SettingsScreen(
                 Spacer(Modifier.width(8.dp))
                 ModeChip("Save", key != apiKey, p) { onApiKey(key) }
             }
+            // Test na miejscu: użytkownik ma wiedzieć od razu, czy klucz działa,
+            // a nie dopiero przy pierwszej rozmowie.
+            var testing by remember { mutableStateOf(false) }
+            var testMsg by remember { mutableStateOf<String?>(null) }
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ModeChip(if (testing) "testing…" else "Test connection", testing, p) {
+                    if (testing) return@ModeChip
+                    testing = true
+                    testMsg = null
+                    scope.launch {
+                        val cfg = app.kaori.reader.data.LlmConfig(baseUrl, model, thinking)
+                        testMsg = app.kaori.reader.data.KaoriEngine.testConnection(
+                            key.ifBlank { apiKey },
+                            cfg,
+                        )
+                        testing = false
+                    }
+                }
+                Spacer(Modifier.width(10.dp))
+                testMsg?.let { msg ->
+                    Text(
+                        msg,
+                        color = if (msg.startsWith("Connected")) {
+                            androidx.compose.ui.graphics.Color(0xFF8FD3A0)
+                        } else {
+                            androidx.compose.ui.graphics.Color(0xFFE08A9A)
+                        },
+                        fontSize = 9.5.sp,
+                        lineHeight = 13.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
         }
     }
+}
+
+/**
+ * Pierwsze uruchomienie: co trzeba ustawić, ile to kosztuje i czego ta apka nie robi.
+ * Jedna kartka, pokazywana raz — dłuższe onboardingi się pomija, tę się czyta.
+ */
+@Composable
+fun WelcomeDialog(
+    onOpenSettings: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val p = LocalPalette.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = p.uiBg,
+        title = { Text("Before you start", fontSize = 16.sp) },
+        text = {
+            Column {
+                Text(
+                    "The reader works right away: add an EPUB and it opens. Talking to her needs " +
+                        "one thing from you — an API key.",
+                    color = p.text, fontSize = 11.sp, lineHeight = 16.sp,
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "WHAT AN API KEY IS\n" +
+                        "A long string that works like a password to an AI service. The app uses it " +
+                        "to send your messages to the model on your behalf. No account here, nothing " +
+                        "to sign up for in this app.",
+                    color = p.text, fontSize = 10.5.sp, lineHeight = 15.sp,
+                )
+                Spacer(Modifier.height(9.dp))
+                Text(
+                    "WHERE TO GET ONE\n" +
+                        "Sign up with a provider — DeepSeek, OpenRouter, OpenAI, or any " +
+                        "OpenAI-compatible service — open their API keys page, create a key, copy it. " +
+                        "Panels change, so look for \"API keys\" or \"API tokens\".",
+                    color = p.text, fontSize = 10.5.sp, lineHeight = 15.sp,
+                )
+                Spacer(Modifier.height(9.dp))
+                Text(
+                    "WHAT IT COSTS\n" +
+                        "Per use, not a subscription. A few dollars lasts a long time; one message is " +
+                        "a fraction of a cent. About $5 of credit is plenty to start.",
+                    color = p.text, fontSize = 10.5.sp, lineHeight = 15.sp,
+                )
+                Spacer(Modifier.height(9.dp))
+                Text(
+                    "KEEP IT SAFE\n" +
+                        "Never show it to anyone, never paste it into a chat or an issue. Set a " +
+                        "spending limit at the provider if they offer one. Here it is encrypted on " +
+                        "this phone, and the app has no server to send it to.",
+                    color = p.textMuted, fontSize = 10.5.sp, lineHeight = 15.sp,
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "Settings has the same explanation, plus a Test connection button that tells " +
+                        "you in a second whether the key works.",
+                    color = p.accent, fontSize = 10.sp, lineHeight = 15.sp,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onOpenSettings) { Text("Open Settings") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Later") }
+        },
+    )
 }
