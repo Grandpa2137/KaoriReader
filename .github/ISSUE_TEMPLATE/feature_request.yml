@@ -1,0 +1,40 @@
+name: Feature request
+description: Something the reader or the companion should do
+title: "[idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before writing: the README lists what the app **deliberately** does not do
+        (no cloud, no DRM, no bundled model, no voice chat). Feature requests that cross
+        those lines will be closed — not out of spite, they are the design.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does it solve
+      description: Describe the situation, not the solution. "When I … I have to …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like it to do
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Reading (pagination, fonts, TOC, search)
+        - Companion (persona, memory, language)
+        - Spoilerguard
+        - Translation
+        - Library / collections / backup
+        - Something else
+    validations:
+      required: true

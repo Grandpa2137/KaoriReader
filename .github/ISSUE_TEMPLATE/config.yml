@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or "how do I …"
+    url: https://github.com/Grandpa2137/KaoriReader/discussions
+    about: Ask in Discussions — issues are for bugs and concrete features.
+  - name: Something she said that made no sense
+    url: https://github.com/Grandpa2137/KaoriReader/discussions
+    about: Paste the exchange (no API key!) in Discussions, it is not a crash.
+  - name: Security problem
+    url: https://github.com/Grandpa2137/KaoriReader/security/advisories/new
+    about: Please report privately, not in a public issue.

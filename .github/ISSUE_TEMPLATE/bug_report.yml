@@ -1,0 +1,71 @@
+name: Bug report
+description: Something is broken, or she said something that does not add up
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Two rules keep this useful:
+        **do not paste your API key**, and check whether the latest release already fixes it.
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings → bottom of the screen, or the release you downloaded
+      placeholder: "0.2.10"
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Android version and phone
+      placeholder: "Android 14, Motorola g84"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider / model
+      options:
+        - DeepSeek (deepseek-chat / deepseek-flash)
+        - OpenAI
+        - OpenRouter
+        - Groq
+        - Local server (LM Studio, Ollama, LocalAI)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. open book X at chapter Y
+        2. long-press the title → mark unread from here
+        3. ask her about Z
+        4. she answers ...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before sending
+      options:
+        - label: I am on the latest release
+          required: true
+        - label: There is no API key or other secret in this report
+          required: true
