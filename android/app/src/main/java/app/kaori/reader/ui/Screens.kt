@@ -1842,9 +1842,9 @@ fun SettingsScreen(
                         Text("Think before answering", color = p.text, fontSize = 12.sp)
                         Text(
                             if (thinking) {
-                                "she reasons first — fewer invented times and numbers, more tokens on your key"
+                                "she reasons first: holds the role and the thread better, invents less — slower and a bit more expensive"
                             } else {
-                                "off — fastest and cheapest, but she will guess more"
+                                "off: fastest and cheapest, but she loses the thread more easily and guesses"
                             },
                             color = p.textDim,
                             fontSize = 10.sp,
