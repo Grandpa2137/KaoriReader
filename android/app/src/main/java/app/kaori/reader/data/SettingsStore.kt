@@ -32,6 +32,17 @@ data class AppSettings(
     val welcomeSeen: Boolean = false,
 )
 
+/**
+ * Karta „Before you start" jest dla kogoś, kto właśnie zainstalował apkę i nie ma klucza.
+ * Kto klucz ma (czyli każdy, kto aktualizuje z poprzedniej wersji), nie potrzebuje wykładu
+ * o kluczach — dlatego sam brak klucza też jest warunkiem, nie tylko flaga.
+ *
+ * Wydzielone z MainActivity, żeby dało się to sprawdzić testem: błąd tutaj oznacza albo
+ * wykład dla doświadczonego użytkownika, albo brak pomocy dla nowego.
+ */
+internal fun shouldShowWelcome(seen: Boolean, apiKey: String): Boolean =
+    !seen && apiKey.isBlank()
+
 class SettingsStore(private val context: Context) {
 
     private object Keys {

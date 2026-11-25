@@ -563,18 +563,27 @@ first — one short beat, then your line — and stay in the place he set. Never
             .put("max_tokens", 1)
             .withThinking(config, allowReasoning = false)
         val out = post(config, apiKey, body.toString())
-        when {
-            out.startsWith("Can't connect") -> out
-            out.contains("(401") || out.contains("Unauthorized") ->
-                "Key rejected by the provider (401). Copy it again — a missing character is enough."
-            out.contains("(402") || out.contains("Insufficient") || out.contains("balance") ->
-                "The key works, but there is no credit on that account."
-            out.contains("(404") ->
-                "Address or model not found (404). Check the API address and the model name."
-            out.contains("(429") -> "Rate limited (429). The key works, wait a moment."
-            out.startsWith("API error") -> out
-            else -> "Connected · ${config.model}"
-        }
+        testVerdict(out, config.model)
+    }
+
+    /**
+     * Jedno zdanie z surowej odpowiedzi dostawcy. Wydzielone, bo to jedyny kawałek testu
+     * klucza, który da się sprawdzić bez sieci — a psuje się najczęściej, bo dostawcy
+     * zmieniają treść błędów i kody. Test jednostkowy pilnuje mapowania, nie sieci.
+     */
+    internal fun testVerdict(raw: String, model: String): String = when {
+        raw.startsWith("Can't connect") -> raw
+        raw.contains("(401") || raw.contains("Unauthorized") || raw.contains("invalid_api_key") ->
+            "Key rejected by the provider (401). Copy it again — a missing character is enough."
+        raw.contains("(402") || raw.contains("Insufficient") || raw.contains("balance") ->
+            "The key works, but there is no credit on that account."
+        raw.contains("(404") ->
+            "Address or model not found (404). Check the API address and the model name."
+        raw.contains("Model Not Exist") || raw.contains("model_not_found") || raw.contains("does not exist") ->
+            "Address or model not found. The API address answers, but that model name does not exist there."
+        raw.contains("(429") -> "Rate limited (429). The key works, wait a moment."
+        raw.startsWith("API error") -> raw
+        else -> "Connected · $model"
     }
 
     private fun JSONObject.withThinking(config: LlmConfig, allowReasoning: Boolean = false): JSONObject {

@@ -59,6 +59,7 @@ import app.kaori.reader.data.ReadRanges
 import app.kaori.reader.data.ReadingProgress
 import app.kaori.reader.data.SettingsStore
 import app.kaori.reader.data.StatsStore
+import app.kaori.reader.data.shouldShowWelcome
 import app.kaori.reader.data.DayStat
 import app.kaori.reader.ui.ChatScreen
 import app.kaori.reader.ui.LibraryScreen
@@ -782,8 +783,9 @@ private fun KaoriApp() {
             }
 
             // Pierwsze uruchomienie: jedna kartka, co trzeba ustawić i czego apka nie zrobi.
-            // Pokazuje się raz — potem nie zawraca głowy.
-            if (!settings.welcomeSeen) {
+            // Pokazuje się raz — potem nie zawraca głowy. Warunek na pusty klucz jest po to,
+            // żeby ktoś, kto aktualizuje z 0.2.11 i ma już klucz, nie dostał wykładu o kluczach.
+            if (shouldShowWelcome(settings.welcomeSeen, settings.apiKey)) {
                 WelcomeDialog(
                     onOpenSettings = {
                         scope.launch { store.setWelcomeSeen(true) }

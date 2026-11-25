@@ -1,0 +1,7 @@
+0.2.13
+
+- If you already have an API key, the "Before you start" card no longer
+  greets you after an update. It is for first installs only.
+- "Test connection" also recognises a wrong model name when the provider
+  answers 400 instead of 404, so the message says the model is wrong
+  instead of showing a raw error.
