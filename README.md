@@ -203,11 +203,13 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite (64 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
+The suite (84 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
 ranges, merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
 chapter splitting, so a long chapter is never cut in half), `Endpoints` (https everywhere,
 plain http only on private hosts — including the ranges just outside the private blocks),
-`detectLang` (which language the last message is in) and the data layer —
+`detectLang` (which language the last message is in), `testVerdict` (what "Test connection"
+says for 401, no credit, wrong model, rate limit and an unknown error — and that a plain
+`http://` address to the internet is refused before the key is ever sent) and the data layer —
 `AtomicJson` (temp file + rename, `.bak` of the previous version, recovery from `.bak` when the
 main file is broken, quarantine when both are), `ProgressStore`
 (corrupt JSON is set aside instead of being overwritten with an empty map),
