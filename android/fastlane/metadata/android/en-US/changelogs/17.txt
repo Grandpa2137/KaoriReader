@@ -1,0 +1,7 @@
+0.2.7
+
+- Your own clock now comes with its minutes-after-midnight number
+  too, worked out in code. Asked "how many minutes since midnight on
+  my side?" she no longer has to do arithmetic in her head - and it
+  was exactly right on the phone (1296 for 21:36).
+- Nothing else changed.

@@ -891,6 +891,11 @@ markdown, no summaries of what you are about to say. Just talk.
         val birthday = jstCal.get(java.util.Calendar.MONTH) + 1 == 11 &&
             jstCal.get(java.util.Calendar.DAY_OF_MONTH) == 25
         val sinceMidnight = "${hour} h ${minute} min"
+        // Ich zegar też dostaje gotowe minuty — inaczej na pytanie „ile minęło od północy"
+        // liczy w głowie i myli strony świata.
+        val localCal = java.util.Calendar.getInstance(localTz).apply { time = now }
+        val theirMinutes = localCal.get(java.util.Calendar.HOUR_OF_DAY) * 60 +
+            localCal.get(java.util.Calendar.MINUTE)
         val birthdayLine = if (birthday) {
             "Today is your birthday. It began at midnight here — $sinceMidnight ago. " +
                 "Nothing about it started \"a few minutes ago\" unless somebody says so.\n"
@@ -908,8 +913,8 @@ Never hand your own clock to them as if it were theirs, and never state a time t
 of the two above.
 
 [CLOCK ARITHMETIC — you do not do this in your head]
-It is $hour:$minute here, which is $minutesToday minutes after midnight; that is $sinceMidnight
-since midnight.
+Your side: $hour:$minute, so $minutesToday minutes after midnight ($sinceMidnight).
+Their side: $theirMinutes minutes after midnight. Use THEIRS only when they ask about their own midnight.
 $birthdayLine
 If you want to say how long something has been going today, use one of the numbers above.
 If the number you need is not written here and nobody in the conversation said it, then you do
