@@ -240,6 +240,11 @@ sits inside them, no ranges yet → up to the current chapter) and `Backup.readR
 
 The app never asks the model to "please not spoil". It simply does not send the text.
 
+![Asking how the book ends, at 48% read](docs/demo-spoiler.gif)
+
+*Asked how the book ends at 48% read. She has not been sent the ending, so she does not have
+one to give — and she says so instead of inventing it.*
+
 1. Every page you actually dwell on (≥2 s) is recorded as a character range.
    Jumping with the table of contents or search marks nothing.
 2. Those ranges are merged into a per-book set of read ranges.
