@@ -1791,6 +1791,27 @@ fun SettingsScreen(
                 textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp),
                 modifier = Modifier.fillMaxWidth(),
             )
+            // https wszędzie; http tylko do własnej sieci (localhost, 10.x, 192.168.x,
+            // 172.16–31.x, *.local) — i wtedy mówimy wprost, że to idzie bez szyfrowania.
+            val urlCheck = app.kaori.reader.data.Endpoints.check(url)
+            if (urlCheck.plainHttpLocal) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "plain http to your own network — the key and the messages travel unencrypted " +
+                        "inside your LAN. Fine for a home server, never for the internet.",
+                    color = androidx.compose.ui.graphics.Color(0xFFE0B76A),
+                    fontSize = 9.sp,
+                    lineHeight = 13.sp,
+                )
+            } else if (!urlCheck.ok && url.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "won't work: ${urlCheck.problem}",
+                    color = androidx.compose.ui.graphics.Color(0xFFE08A9A),
+                    fontSize = 9.sp,
+                    lineHeight = 13.sp,
+                )
+            }
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(

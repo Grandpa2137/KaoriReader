@@ -39,9 +39,9 @@ object TranslationStore {
     /** Wariant testowalny: korzeń katalogu zamiast Context. */
     internal fun getFrom(root: File, bookId: String, lang: String, text: String): String? {
         val f = file(root, bookId, lang, text)
-        if (!f.exists()) return null
-        val body = runCatching { f.readText() }.getOrNull() ?: return null
-        if (body.isBlank()) return null
+        // AtomicJson.read: przy uszkodzonym pliku sięga po .bak, zamiast udawać,
+        // że tłumaczenia nigdy nie było (wtedy płacisz drugi raz za to samo).
+        val body = AtomicJson.read(f) { it }?.takeIf { it.isNotBlank() } ?: return null
         // dotknięcie pliku, żeby porządkowanie wiedziało, co jest świeże
         runCatching { f.setLastModified(System.currentTimeMillis()) }
         return body

@@ -311,6 +311,7 @@ once, in your own voice, and then drop it.
         strictRole: Boolean,
         builtinText: String = "",
         langOverride: String = "",
+        detectedLang: String = "",
     ): String {
         val base = if (persona.builtin) {
             if (builtinText.isNotBlank()) builtinText
@@ -319,12 +320,22 @@ once, in your own voice, and then drop it.
             customSystem(persona, reading)
         }
         // Język wybrany chipem w czacie bije wszystko inne — i jest podany dwa razy,
-        // bo modele najczęściej gubią właśnie instrukcję językową.
+        // bo modele najczęściej gubią właśnie instrukcję językową. Gdy chip jest na „auto”,
+        // język wykrywa kod z OSTATNIEJ wiadomości: model inaczej kopiuje język historii
+        // i potrafi odpowiedzieć po polsku na angielskie pytanie.
         val forced = when (langOverride) {
             "en" -> "\n\n[LANGUAGE] Answer in English. Always, in every reply, whatever he writes in."
             "pl" -> "\n\n[LANGUAGE] Answer in Polish. Always, in every reply, whatever he writes in."
             "ja" -> "\n\n[LANGUAGE] Answer in Japanese. Always, in every reply, whatever he writes in."
-            else -> ""
+            else -> when (detectedLang) {
+                "en" -> "\n\n[LANGUAGE] His last message is in English. Answer in English — even if " +
+                    "earlier messages here were in another language. Never switch language on your own."
+                "pl" -> "\n\n[LANGUAGE] His last message is in Polish. Answer in Polish — even if " +
+                    "earlier messages here were in another language. Never switch language on your own."
+                "ja" -> "\n\n[LANGUAGE] His last message is in Japanese. Answer in Japanese — even if " +
+                    "earlier messages here were in another language. Never switch language on your own."
+                else -> ""
+            }
         }
         // Na końcu promptu, bo tam modele słuchają najmocniej.
         val tail = if (strictRole) "\n\n" + STRICT_ROLE_BLOCK else ""
@@ -421,7 +432,14 @@ markdown, no summaries of what you are about to say. Just talk.
             messages.put(
                 JSONObject().put("role", "system").put(
                     "content",
-                    systemFor(persona, reading, strictRole, personaText, langOverride),
+                    systemFor(
+                        persona = persona,
+                        reading = reading,
+                        strictRole = strictRole,
+                        builtinText = personaText,
+                        langOverride = langOverride,
+                        detectedLang = if (langOverride.isBlank()) detectLang(question) else "",
+                    ),
                 )
             )
             windowOf(history).forEach { m ->
@@ -437,7 +455,9 @@ markdown, no summaries of what you are about to say. Just talk.
                 .put("temperature", if (strictRole) 1.1 else 1.0)
                 .put("top_p", if (strictRole) 0.95 else 1.0)
                 .put("max_tokens", 700)
-                .withThinking(config)
+                // Tu model ma się zastanowić, zanim odpowie: stąd biorą się zmyślone
+                // godziny i „od 17 minut”, których nikt nie policzył.
+                .withThinking(config, enabled = true)
 
             val raw = post(config, apiKey, body.toString())
             // Gdyby odbiła znacznik czasu na początku — wycinamy TYLKO formę "(sent ...)"
@@ -487,13 +507,14 @@ markdown, no summaries of what you are about to say. Just talk.
 
 
     /**
-     * `thinking: disabled` to pole specyficzne dla DeepSeeka. OpenAI i inni nie muszą go znać,
+     * `thinking` to pole specyficzne dla DeepSeeka. OpenAI i inni nie muszą go znać,
      * a ścisłe bramki potrafią odrzucić nieznane pole błędem 400 — więc wysyłamy je tylko tam,
-     * gdzie ma sens.
+     * gdzie ma sens. Rozumowanie włączamy tylko wtedy, gdy model ma się zastanowić
+     * (zwykła rozmowa) — tłumaczenie i streszczenia mają być tanie i szybkie.
      */
-    private fun JSONObject.withThinking(config: LlmConfig): JSONObject {
+    private fun JSONObject.withThinking(config: LlmConfig, enabled: Boolean = false): JSONObject {
         if (config.baseUrl.contains("deepseek", ignoreCase = true)) {
-            put("thinking", JSONObject().put("type", "disabled"))
+            put("thinking", JSONObject().put("type", if (enabled) "enabled" else "disabled"))
         }
         return this
     }
@@ -838,11 +859,35 @@ markdown, no summaries of what you are about to say. Just talk.
 
         val weatherLine = if (weather.isNotBlank()) "Weather in Hadano: $weather\n" else ""
 
+        // Arytmetyka czasu musi być ZROBIONA TUTAJ, nie w głowie modelu. Bez tego
+        // „urodziny od 17 minut” o trzeciej dwadzieścia jeden, bo model zgaduje zamiast liczyć.
+        val hour = jstCal.get(java.util.Calendar.HOUR_OF_DAY)
+        val minute = jstCal.get(java.util.Calendar.MINUTE)
+        val minutesToday = hour * 60 + minute
+        val birthday = jstCal.get(java.util.Calendar.MONTH) + 1 == 11 &&
+            jstCal.get(java.util.Calendar.DAY_OF_MONTH) == 25
+        val sinceMidnight = "${hour} h ${minute} min"
+        val birthdayLine = if (birthday) {
+            "Today is your birthday. It began at midnight here — $sinceMidnight ago. " +
+                "Nothing about it started \"a few minutes ago\" unless somebody says so.\n"
+        } else {
+            ""
+        }
+
         return """
 [WHEN — read this carefully, the two clocks are different]
 YOUR time, in Hadano: ${fmt(jst)} JST. This is the time YOU live in. If they ask what time it
-is, you answer with THIS one, never with theirs.
+is for you, or how your night is going, you answer with THIS one.
 Their phone: ${fmt(localTz)} (${localTz.id}) — they are $shift.
+Never hand your own clock to them as if it were theirs.
+
+[CLOCK ARITHMETIC — you do not do this in your head]
+It is $hour:$minute here, which is $minutesToday minutes after midnight; that is $sinceMidnight
+since midnight.
+$birthdayLine
+If you want to say how long something has been going today, use one of the numbers above.
+If the number you need is not written here and nobody in the conversation said it, then you do
+not know it — say that in one line. Never invent "17 minutes", "an hour ago" or any other figure.
 
 [YOUR DAY — this is your life, not decoration]
 Right now: $activity
@@ -904,6 +949,44 @@ record does, not a person.
                 "at home doing absolutely nothing productive",
             )
             else -> "at home, nothing special"
+        }
+    }
+
+    /**
+     * Język OSTATNIEJ wiadomości — liczony w kodzie, bo model bez tego kopiuje język
+     * historii i potrafi odpowiedzieć po polsku na angielskie pytanie.
+     *
+     * Heurystyka, ale wystarczająca: kana → japoński, polskie diakrytyki → polski,
+     * dalej porównanie najczęstszych słów. Puste = nie wiadomo, wtedy nic nie narzucamy.
+     */
+    internal fun detectLang(text: String): String {
+        if (text.isBlank()) return ""
+        if (text.count { it.code in 0x3040..0x30FF } >= 3) return "ja"
+
+        val lower = text.lowercase()
+        // diakrytyki to najmocniejszy sygnał — w angielskim ich nie ma w ogóle
+        if (lower.count { it in "ąćęłńóśźż" } >= 2) return "pl"
+
+        val words = lower.replace(Regex("[^a-ząćęłńóśźż' ]"), " ")
+            .split(' ')
+            .filter { it.isNotBlank() }
+            .toSet()
+        val plWords = setOf(
+            "nie", "jest", "sie", "się", "jak", "co", "ze", "że", "to", "tak", "dla",
+            "jestem", "wiem", "ale", "juz", "już", "tylko", "bardzo", "dobrze", "musze",
+            "muszę", "moze", "może", "bylo", "było", "czemu", "dlaczego", "nic", "teraz",
+        )
+        val enWords = setOf(
+            "the", "you", "and", "is", "are", "what", "that", "this", "im", "dont",
+            "its", "with", "have", "was", "were", "not", "but", "just", "very", "good",
+            "know", "about", "how", "why", "when", "there", "your", "can", "will",
+        )
+        val pl = words.count { it in plWords } * 3
+        val en = words.count { it in enWords } * 3
+        return when {
+            pl > en && pl >= 3 -> "pl"
+            en > pl && en >= 3 -> "en"
+            else -> ""
         }
     }
 
@@ -1115,6 +1198,10 @@ record does, not a person.
     )
 
     private fun post(config: LlmConfig, apiKey: String, payload: String): String {
+        // Adres sprawdzamy PRZED połączeniem: https wszędzie, http tylko do sieci lokalnej.
+        val endpointCheck = Endpoints.check(config.endpoint)
+        if (!endpointCheck.ok) return "Can't connect: ${endpointCheck.problem}"
+
         val conn = (URL(config.endpoint).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = 20_000

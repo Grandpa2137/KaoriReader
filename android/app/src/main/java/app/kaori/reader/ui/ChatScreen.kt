@@ -204,8 +204,8 @@ fun ChatScreen(
         if (!spoken.isNullOrBlank()) send(spoken)
     }
     val startVoice: () -> Unit = {
-        // Na telefonie bez syntezatora mowy (albo z wyłączonym) nie ma czego uruchomić
-        runCatching { voiceLauncher.launch(voiceIntent()) }
+        // Na telefonie bez rozpoznawania mowy (albo z wyłączonym) nie ma czego uruchomić
+        runCatching { voiceLauncher.launch(voiceIntent(langOverride)) }
             .onFailure { tokenNotice = "no speech recogniser on this phone" }
     }
 
@@ -639,13 +639,22 @@ private fun Typing(p: KaoriPalette) {
 }
 
 
-/** Intent rozpoznawania mowy — polski, dopasowany do gadania z Kaori. */
-private fun voiceIntent(): android.content.Intent =
+/** Intent rozpoznawania mowy — język taki, jak język tej rozmowy (chip EN/PL/JA), a przy
+ *  „auto” język systemu. Wcześniej był na sztywno polski, więc angielską rozmowę
+ *  rozpoznawał polski model i wychodziły z tego bzdury. */
+private fun voiceIntent(chatLang: String): android.content.Intent =
     android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
         putExtra(
             android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL,
             android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
-        putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, "pl-PL")
+        putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, voiceLocale(chatLang))
         putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Speak to Kaori…")
     }
+
+internal fun voiceLocale(chatLang: String): String = when (chatLang) {
+    "en" -> "en-US"
+    "pl" -> "pl-PL"
+    "ja" -> "ja-JP"
+    else -> java.util.Locale.getDefault().toLanguageTag()
+}

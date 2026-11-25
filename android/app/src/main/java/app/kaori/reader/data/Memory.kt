@@ -99,14 +99,17 @@ object MemoryStore {
         AtomicJson.write(episodesFile(ctx, personaId), arr.toString())
     }
 
-    fun deleteFact(ctx: Context, personaId: String, key: String) =
+    fun deleteFact(ctx: Context, personaId: String, key: String) = synchronized(lock) {
         saveFacts(ctx, personaId, facts(ctx, personaId).filterNot { it.key == key })
+    }
 
-    fun deleteEpisode(ctx: Context, personaId: String, at: Long) =
+    fun deleteEpisode(ctx: Context, personaId: String, at: Long) = synchronized(lock) {
         saveEpisodes(ctx, personaId, episodes(ctx, personaId).filterNot { it.at == at })
+    }
 
-    fun deleteThread(ctx: Context, personaId: String, topic: String) =
+    fun deleteThread(ctx: Context, personaId: String, topic: String) = synchronized(lock) {
         saveThreads(ctx, personaId, threads(ctx, personaId).filterNot { it.topic == topic })
+    }
 
     fun wipe(ctx: Context, personaId: String) {
         runCatching { dir(ctx, personaId).deleteRecursively() }
@@ -114,8 +117,13 @@ object MemoryStore {
 
     // ------------------------------------------------------------------ scalanie
 
+    // Każde scalanie to odczyt całego pliku, zmiana i zapis całości. Dwa naraz
+    // (np. reczne „save this conversation” w trakcie automatycznego zapisu co 12
+    // wiadomości) potrafią się nadpisać — dlatego jeden zamek na wszystkie trzy pliki.
+    private val lock = Any()
+
     /** Fakt o tym samym kluczu zastępuje stary — historia nie jest potrzebna. */
-    fun mergeFact(ctx: Context, personaId: String, key: String, value: String) {
+    fun mergeFact(ctx: Context, personaId: String, key: String, value: String) = synchronized(lock) {
         val all = facts(ctx, personaId).toMutableList()
         val i = all.indexOfFirst { it.key.equals(key, ignoreCase = true) }
         val now = System.currentTimeMillis()
@@ -123,7 +131,7 @@ object MemoryStore {
         saveFacts(ctx, personaId, if (all.size > 120) all.sortedByDescending { it.at }.take(120) else all)
     }
 
-    fun mergeThread(ctx: Context, personaId: String, topic: String, state: String) {
+    fun mergeThread(ctx: Context, personaId: String, topic: String, state: String) = synchronized(lock) {
         val all = threads(ctx, personaId).toMutableList()
         val i = all.indexOfFirst { it.topic.equals(topic, ignoreCase = true) }
         val now = System.currentTimeMillis()
@@ -131,7 +139,7 @@ object MemoryStore {
         saveThreads(ctx, personaId, if (all.size > 40) all.sortedByDescending { it.at }.take(40) else all)
     }
 
-    fun addEpisode(ctx: Context, personaId: String, e: Episode) {
+    fun addEpisode(ctx: Context, personaId: String, e: Episode) = synchronized(lock) {
         val all = (episodes(ctx, personaId) + e).sortedByDescending { it.at }
         saveEpisodes(ctx, personaId, all.take(400))
     }

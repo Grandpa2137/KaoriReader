@@ -1,0 +1,11 @@
+0.2.3
+
+- The chat runs with the model's own reasoning on (DeepSeek), so
+  invented hours and numbers are rarer.
+- The clock is given to her as ready numbers, with a rule not to do
+  time maths herself.
+- Replies stay in your language: it is detected from your last
+  message, and the microphone follows it.
+- Local servers over plain http work (localhost, 10.x, 192.168.x,
+  172.16-31.x, *.local); public http is refused, Settings warns.
+- Stats and memory writes serialised.

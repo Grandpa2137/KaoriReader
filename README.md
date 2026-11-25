@@ -37,7 +37,14 @@ your phone.
 - **home-screen shortcut** from Settings, pointing straight at the app
 
 **Companion (bring your own key)**
-- any OpenAI-compatible endpoint: OpenAI, OpenRouter, DeepSeek, Groq, or your own URL
+- any OpenAI-compatible endpoint: OpenAI, OpenRouter, DeepSeek, Groq, or your own URL —
+  **including a server on your own network over plain http** (`localhost`, `10.x`, `192.168.x`,
+  `172.16–31.x`, `*.local`), which is everything a local LM Studio / Ollama / LocalAI needs.
+  Anything outside your LAN must be `https`, and the app refuses plain http to the internet
+  before a single byte leaves the phone
+- **she thinks before she answers** — on DeepSeek the request runs with the model's own
+  reasoning enabled (chat only; translation and memory stay cheap). The clock is also given
+  to her as ready-made numbers, so she stops inventing "17 minutes ago"
 - she sees the book you are reading, reacts to it, argues about characters
 - **spoiler guard** — she only receives the text you have actually read. Skipped pages are
   not in her context at all, so she cannot leak them, even if the model has seen the book
@@ -63,7 +70,10 @@ your phone.
   chapter title, page counter and TTS — while the original book is left completely untouched;
   the back arrow returns you to where you were in the original
 - **her language** — chips in the chat (auto / EN / PL / JA) change the language she answers in,
-  for this conversation only, without touching the persona
+  for this conversation only, without touching the persona. On *auto* the app detects the
+  language of your last message itself and tells her to stay in it, so she no longer drifts
+  back to Polish in the middle of an English conversation. The microphone follows the same
+  choice (EN → `en-US`, PL → `pl-PL`, JA → `ja-JP`, auto → your phone's language)
 - strict in-character mode: no "as an AI", no meta-commentary, no lists
 - every reply is written in her voice; translation or language switching happens only when you
   ask for it in the message
@@ -147,9 +157,11 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite (45 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
+The suite (55 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
 ranges, merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
-chapter splitting, so a long chapter is never cut in half), and the data layer —
+chapter splitting, so a long chapter is never cut in half), `Endpoints` (https everywhere,
+plain http only on private hosts — including the ranges just outside the private blocks),
+`detectLang` (which language the last message is in) and the data layer —
 `AtomicJson` (temp file + rename, `.bak` of the previous version, recovery from `.bak` when the
 main file is broken, quarantine when both are), `ProgressStore`
 (corrupt JSON is set aside instead of being overwritten with an empty map),
@@ -209,6 +221,11 @@ Being explicit here saves everyone a review comment:
   mention it — one small keyless request, cached for 30 minutes. Custom personas never do
   this.
 - Keys live in Android Keystore; backups are excluded (`allowBackup="false"`).
+- The manifest allows cleartext traffic, because Android cannot whitelist IP ranges — but the
+  app checks every address in code: `http://` is accepted **only** for private hosts
+  (`localhost`, `127.x`, `10.x`, `192.168.x`, `172.16–31.x`, `169.254.x`, `*.local`), and
+  everything else has to be `https://`. Settings shows an explicit warning while a plain-http
+  address is in use. `EndpointsTest` covers the ranges, including the ones just outside them.
 
 ---
 

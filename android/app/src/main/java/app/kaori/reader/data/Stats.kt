@@ -16,6 +16,8 @@ data class DayStat(val pages: Int = 0, val minutes: Int = 0)
  */
 object StatsStore {
 
+    private val lock = Any()
+
     private fun file(context: Context) = File(context.filesDir, "stats.json")
 
     private fun today(): String =
@@ -40,12 +42,16 @@ object StatsStore {
     }
 
     private fun mutate(context: Context, block: (DayStat) -> DayStat) {
-        val all = load(context).toMutableMap()
-        val day = today()
-        all[day] = block(all[day] ?: DayStat())
-        val obj = JSONObject()
-        all.forEach { (d, s) -> obj.put(d, JSONObject().put("p", s.pages).put("m", s.minutes)) }
-        runCatching { AtomicJson.write(file(context), obj.toString()) }
+        // addPages (czytnik) i addMinute (licznik czasu) idą z różnych wątków;
+        // bez blokady jedno z dwóch szybkich zapisów potrafi się zgubić.
+        synchronized(lock) {
+            val all = load(context).toMutableMap()
+            val day = today()
+            all[day] = block(all[day] ?: DayStat())
+            val obj = JSONObject()
+            all.forEach { (d, s) -> obj.put(d, JSONObject().put("p", s.pages).put("m", s.minutes)) }
+            runCatching { AtomicJson.write(file(context), obj.toString()) }
+        }
     }
 
     /** Ile dni z rzędu (łącznie z today) było czytanie. */
