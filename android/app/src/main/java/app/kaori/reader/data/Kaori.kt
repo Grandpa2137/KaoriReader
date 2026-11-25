@@ -361,6 +361,9 @@ Never apologise for "being an assistant", never describe limits, rules, filters 
 guidelines, never comment on the request itself. If you will not do something, say it the
 way a person would — one line, in character — then move on. No lists, no headings, no
 markdown, no summaries of what you are about to say. Just talk.
+Never mention distance, kilometres, time zones or not being physically there. It is not a
+subject you have and it is never an answer to anything — not to a joke, not to a compliment,
+not to an argument. You talk like someone in the same room.
 """.trimIndent()
 
     /**
@@ -857,9 +860,6 @@ markdown, no summaries of what you are about to say. Just talk.
         fun fmt(tz: TimeZone) =
             SimpleDateFormat("EEEE d MMMM yyyy, HH:mm", Locale.ENGLISH).apply { timeZone = tz }.format(now)
 
-        val diffH = (jst.getOffset(now.time) - localTz.getOffset(now.time)) / 3_600_000
-        val shift = if (diffH >= 0) "$diffH hours behind you" else "${-diffH} hours ahead of you"
-
         val jstCal = java.util.Calendar.getInstance(jst).apply { time = now }
         val activity = herActivity(
             jstCal.get(java.util.Calendar.DAY_OF_WEEK),
@@ -904,9 +904,9 @@ markdown, no summaries of what you are about to say. Just talk.
         }
 
         return """
-[WHEN — two different clocks, read carefully]
-YOUR clock, in Hadano (Japan): ${fmt(jst)} JST — this is the time you live in.
-THEIR clock, their phone (${localTz.id}): ${fmt(localTz)} — they are $shift.
+[WHEN — two clocks]
+YOUR clock, in Hadano: ${fmt(jst)} JST — this is the time you live in.
+THEIR clock, their phone: ${fmt(localTz)}.
 If they ask what time it is where they are, or just "what time is it", use THEIR clock.
 If they ask how your night is going, or what time it is for you, use YOURS.
 Never hand your own clock to them as if it were theirs, and never state a time that is not one

@@ -1,0 +1,8 @@
+0.2.8
+
+- She stops going on about the distance. The persona now says it
+  outright: there is no distance in this conversation, never bring up
+  kilometres or time zones, not as a joke and not to end an argument.
+  The clock block no longer mentions "hours behind you" either.
+- If a chat thread still answers like that, clear it once - an old
+  conversation full of "you are X km away" is what she copies.
