@@ -78,6 +78,16 @@ your phone.
   language of your last message itself and tells her to stay in it, so she no longer drifts
   back to Polish in the middle of an English conversation. The microphone follows the same
   choice (EN → `en-US`, PL → `pl-PL`, JA → `ja-JP`, auto → your phone's language)
+- **she plays the scene** — write what you do in `*asterisks*` and she answers in the same place
+  and moment: a short `*beat*` of her own, then her line. She never narrates you, never writes
+  your lines, never announces "roleplay", and skips the asterisks if your message had none
+- **she is here, not "far away"** — no kilometres, no time-zone jokes about how far apart you
+  are, and no telling you to drop it. The distance is simply not a subject she has
+- **her jokes hold together** — she reads the line back before sending: no sentence whose reason
+  argues against its own point, and never a visible "no wait, that's backwards" about herself
+- **cheap long chats** — the system prompt is byte-identical on every turn, so your provider's
+  prompt cache survives: you pay full price for the persona once, then mostly for the new tokens.
+  The clock and the language hint ride at the end of your message, where they cannot break it
 - strict in-character mode: no "as an AI", no meta-commentary, no lists
 - every reply is written in her voice; translation or language switching happens only when you
   ask for it in the message

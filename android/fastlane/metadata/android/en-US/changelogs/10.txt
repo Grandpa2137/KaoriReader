@@ -1,12 +1,10 @@
 0.2.0
 
-- every JSON store now writes atomically (tmp + rename, previous version kept as .bak);
-  a corrupt progress file is moved aside instead of being overwritten
-- removed the RECORD_AUDIO permission: voice input goes through the system recognizer,
-  which does its own recording
-- "thinking: disabled" is sent only to DeepSeek, so stricter OpenAI-compatible endpoints
+- every JSON store writes atomically (tmp + rename, .bak kept);
+  a corrupt file is moved aside, not overwritten
+- removed RECORD_AUDIO: voice input goes through the system recognizer
+- "thinking: disabled" only to DeepSeek, so stricter endpoints
   do not reject the request
-- page fetching is capped at 2 MB of text
-- if the Android Keystore refuses to encrypt the API key, the app says so instead of
-  silently saving nothing
+- page fetching capped at 2 MB of text
+- Keystore failures are reported instead of silently saving nothing
 - GitHub Actions runs the unit tests on every push
