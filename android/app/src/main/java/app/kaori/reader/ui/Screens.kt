@@ -1957,38 +1957,45 @@ fun SettingsScreen(
                 ModeChip("Save", key != apiKey, p) { onApiKey(key) }
             }
             // Test na miejscu: użytkownik ma wiedzieć od razu, czy klucz działa,
-            // a nie dopiero przy pierwszej rozmowie.
+            // a nie dopiero przy pierwszej rozmowie. Cały pasek jest przyciskiem —
+            // mały chip w kącie był zbyt łatwy do przegapienia.
             var testing by remember { mutableStateOf(false) }
             var testMsg by remember { mutableStateOf<String?>(null) }
             val scope = androidx.compose.runtime.rememberCoroutineScope()
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                ModeChip(if (testing) "testing…" else "Test connection", testing, p) {
-                    if (testing) return@ModeChip
-                    testing = true
-                    testMsg = null
-                    scope.launch {
-                        val cfg = app.kaori.reader.data.LlmConfig(baseUrl, model, thinking)
-                        testMsg = app.kaori.reader.data.KaoriEngine.testConnection(
-                            key.ifBlank { apiKey },
-                            cfg,
-                        )
-                        testing = false
+            Spacer(Modifier.height(9.dp))
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(11.dp))
+                    .background(p.uiSurfaceRaised)
+                    .clickable(enabled = !testing) {
+                        testing = true
+                        testMsg = null
+                        scope.launch {
+                            val cfg = app.kaori.reader.data.LlmConfig(baseUrl, model, thinking)
+                            testMsg = app.kaori.reader.data.KaoriEngine.testConnection(
+                                key.ifBlank { apiKey },
+                                cfg,
+                            )
+                            testing = false
+                        }
                     }
-                }
-                Spacer(Modifier.width(10.dp))
-                testMsg?.let { msg ->
-                    Text(
-                        msg,
-                        color = if (msg.startsWith("Connected")) {
+                    .padding(horizontal = 12.dp, vertical = 11.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                when {
+                    testing -> Text("testing…", color = p.textDim, fontSize = 10.5.sp)
+                    testMsg != null -> Text(
+                        testMsg!!,
+                        color = if (testMsg!!.startsWith("Connected")) {
                             androidx.compose.ui.graphics.Color(0xFF8FD3A0)
                         } else {
                             androidx.compose.ui.graphics.Color(0xFFE08A9A)
                         },
-                        fontSize = 9.5.sp,
-                        lineHeight = 13.sp,
-                        modifier = Modifier.weight(1f),
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp,
                     )
+                    else -> Text("Test connection", color = p.accent, fontSize = 10.5.sp)
                 }
             }
         }

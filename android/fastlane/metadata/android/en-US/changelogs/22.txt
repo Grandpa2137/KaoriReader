@@ -1,0 +1,7 @@
+0.2.12
+
+- "Test connection" is now a full-width bar under the key field,
+  not a small chip in the corner. Easier to find, easier to hit.
+- The bar shows the result in place: green "Connected - model" or
+  the reason it failed (rejected key, no credit, wrong model,
+  rate limit). Tap it again to retest.
