@@ -3,6 +3,12 @@ name: Android
 on:
   push:
     branches: [main]
+    # Sam opis nie wymaga budowania — pełny build na literówkę w README to strata minut
+    # i szum w historii. Kod, gradle i workflow dalej odpala testy normalnie.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
   pull_request:
   workflow_dispatch:
 

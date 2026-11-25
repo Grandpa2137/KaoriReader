@@ -1,0 +1,6 @@
+0.2.14
+
+- Pasting a link that redirects no longer surprises the app: redirects are
+  followed one hop at a time, and each hop must still be https and outside
+  your own network. A public page can no longer bounce the fetch into your
+  router or NAS, and a redirect loop stops after 5 hops.

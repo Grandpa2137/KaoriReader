@@ -1157,56 +1157,87 @@ record does, not a person.
     private const val MAX_PAGE_CHARS = 2_000_000
     private const val HISTORY_CHARS = 16_000
     private const val HISTORY_MIN = 8
+    private const val MAX_REDIRECTS = 5
+
+    /**
+     * Jeden krok przekierowania. `null` znaczy „tam nie idziemy": brak `Location`,
+     * za dużo skoków albo adres, którego nie wolno odwiedzić (plain http, sieć lokalna).
+     *
+     * Każdy skok sprawdzamy od nowa, bo publiczna strona może przekierować do routera
+     * w twojej sieci — a wtedy sprawdzenie samego wklejonego linku byłoby ozdobą.
+     */
+    internal fun nextHop(current: String, location: String?, hops: Int): String? {
+        if (location.isNullOrBlank() || hops >= MAX_REDIRECTS) return null
+        val resolved = runCatching { URL(URL(current), location.trim()).toString() }.getOrNull()
+            ?: return null
+        return if (Endpoints.checkFetch(resolved).ok) resolved else null
+    }
+
+    private fun openPage(target: String): HttpURLConnection =
+        (URL(target).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 15_000
+            readTimeout = 25_000
+            // Przekierowania prowadzimy sami — inaczej HttpURLConnection skacze po cichu
+            // i nie ma kiedy sprawdzić, gdzie wylądował.
+            instanceFollowRedirects = false
+            setRequestProperty(
+                "User-Agent",
+                "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 " +
+                    "(KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36"
+            )
+            setRequestProperty("Accept", "text/html,application/xhtml+xml,text/plain;q=0.9")
+            setRequestProperty("Accept-Language", "pl,en;q=0.8")
+        }
+
+    /** Czyta treść z limitem — bez tego jeden wielki plik potrafi zjeść pamięć i tokeny. */
+    private fun readBody(conn: HttpURLConnection, code: Int): String {
+        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+        return BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { reader ->
+            val sb = StringBuilder()
+            val buf = CharArray(16 * 1024)
+            var total = 0
+            while (total < MAX_PAGE_CHARS) {
+                val read = reader.read(buf)
+                if (read <= 0) break
+                sb.append(buf, 0, read)
+                total += read
+            }
+            sb.toString()
+        }
+    }
 
     /**
      * Scraping: pobiera stronę i zamienia HTML na czysty tekst. Bez JS i bez cookie —
      * działa tam, gdzie treść jest w HTML-u (artykuły, wiki, blogi, dokumentacja).
      */
     suspend fun fetchPage(url: String): String = withContext(Dispatchers.IO) {
-        val target = url.trim().trimEnd('.', ',', ')', ']', '>', '"')
-        // Wklejony link: tylko https i nigdy twoja sieć lokalna.
-        val allowed = Endpoints.checkFetch(target)
-        if (!allowed.ok) return@withContext ""
-        runCatching {
-            val conn = (URL(target).openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 15_000
-                readTimeout = 25_000
-                instanceFollowRedirects = true
-                setRequestProperty(
-                    "User-Agent",
-                    "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 " +
-                        "(KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36"
-                )
-                setRequestProperty("Accept", "text/html,application/xhtml+xml,text/plain;q=0.9")
-                setRequestProperty("Accept-Language", "pl,en;q=0.8")
+        var target = url.trim().trimEnd('.', ',', ')', ']', '>', '"')
+        var hops = 0
+        for (attempt in 0..MAX_REDIRECTS) {
+            // Wklejony link i każdy kolejny skok: tylko https i nigdy twoja sieć lokalna.
+            if (!Endpoints.checkFetch(target).ok) return@withContext ""
+            val conn = runCatching { openPage(target) }.getOrNull() ?: return@withContext ""
+            val code = runCatching { conn.responseCode }.getOrDefault(-1)
+            if (code in 300..399) {
+                val location = conn.getHeaderField("Location")
+                conn.disconnect()
+                target = nextHop(target, location, hops) ?: return@withContext ""
+                hops++
+                continue
             }
-            val code = conn.responseCode
-            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-            // Limit: bez tego jeden wielki plik potrafi zjeść pamięć i tokeny.
-            val raw = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { reader ->
-                val sb = StringBuilder()
-                val buf = CharArray(16 * 1024)
-                var total = 0
-                while (total < MAX_PAGE_CHARS) {
-                    val read = reader.read(buf)
-                    if (read <= 0) break
-                    sb.append(buf, 0, read)
-                    total += read
-                }
-                sb.toString()
-            }
+            val raw = runCatching { readBody(conn, code) }.getOrDefault("")
             conn.disconnect()
-            if (code !in 200..299) return@runCatching ""
+            if (code !in 200..299) return@withContext ""
             // Strony typu op.gg nie mają treści w HTML-u — pakują ją w JSON
             // wewnątrz <script>. Bierzemy to, co daje więcej tekstu.
             val plain = htmlToText(raw).take(WEB_CHARS)
-            if (plain.length >= 600) plain
-            else {
+            return@withContext if (plain.length >= 600) plain else {
                 val embedded = embeddedJsonText(raw).take(WEB_CHARS)
                 if (embedded.length > plain.length) embedded else plain
             }
-        }.getOrDefault("")
+        }
+        "" // przekierowania zapętliły się albo przekroczyły limit skoków
     }
 
     /**

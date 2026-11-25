@@ -62,7 +62,8 @@ your phone.
   (plain HTML, or data hidden in the page's JSON), so you can ask about an article without
   copying it by hand. Only `https://` links are fetched, and never an address from your own
   network — a pasted `http://192.168.1.1/…` is refused, so she cannot be used to read your
-  router or NAS
+  router or NAS. Redirects are followed one hop at a time and every hop is checked again, so a
+  public page cannot bounce the request into your LAN
 - **she can see pictures** — attach a photo to a message, and book illustrations from the part
   you have already read are sent along with the text, so she comments on the image itself
 - **translate the page or the whole chapter** — the 文 button in the reader sends what you are
@@ -206,13 +207,15 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite (84 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
+The suite (94 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
 ranges, merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
 chapter splitting, so a long chapter is never cut in half), `Endpoints` (https everywhere,
 plain http only on private hosts — including the ranges just outside the private blocks),
 `detectLang` (which language the last message is in), `testVerdict` (what "Test connection"
 says for 401, no credit, wrong model, rate limit and an unknown error — and that a plain
-`http://` address to the internet is refused before the key is ever sent) and the data layer —
+`http://` address to the internet is refused before the key is ever sent), `nextHop` (a redirect
+that points at plain http, a private address or `*.local` is refused before the request is made)
+and the data layer —
 `AtomicJson` (temp file + rename, `.bak` of the previous version, recovery from `.bak` when the
 main file is broken, quarantine when both are), `ProgressStore`
 (corrupt JSON is set aside instead of being overwritten with an empty map),
