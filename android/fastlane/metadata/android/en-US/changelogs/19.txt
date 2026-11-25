@@ -1,0 +1,9 @@
+0.2.9
+
+- She plays along with scenes. Write an action in *asterisks* and she
+  answers in the same place and moment: a short *beat* of her own,
+  then her line. No narrating you, no "as a character", no resetting
+  the scene.
+- She reads her own line back before sending it: no sentence whose
+  reason argues against its own point.
+- The check is silent - she never narrates the fix in the message.
