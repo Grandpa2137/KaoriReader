@@ -319,8 +319,6 @@ once, in your own voice, and then drop it.
         reading: Boolean,
         strictRole: Boolean,
         builtinText: String = "",
-        langOverride: String = "",
-        detectedLang: String = "",
     ): String {
         val base = if (persona.builtin) {
             if (builtinText.isNotBlank()) builtinText
@@ -328,27 +326,11 @@ once, in your own voice, and then drop it.
         } else {
             customSystem(persona, reading)
         }
-        // Język wybrany chipem w czacie bije wszystko inne — i jest podany dwa razy,
-        // bo modele najczęściej gubią właśnie instrukcję językową. Gdy chip jest na „auto”,
-        // język wykrywa kod z OSTATNIEJ wiadomości: model inaczej kopiuje język historii
-        // i potrafi odpowiedzieć po polsku na angielskie pytanie.
-        val forced = when (langOverride) {
-            "en" -> "\n\n[LANGUAGE] Answer in English. Always, in every reply, whatever he writes in."
-            "pl" -> "\n\n[LANGUAGE] Answer in Polish. Always, in every reply, whatever he writes in."
-            "ja" -> "\n\n[LANGUAGE] Answer in Japanese. Always, in every reply, whatever he writes in."
-            else -> when (detectedLang) {
-                "en" -> "\n\n[LANGUAGE] His last message is in English. Answer in English — even if " +
-                    "earlier messages here were in another language. Never switch language on your own."
-                "pl" -> "\n\n[LANGUAGE] His last message is in Polish. Answer in Polish — even if " +
-                    "earlier messages here were in another language. Never switch language on your own."
-                "ja" -> "\n\n[LANGUAGE] His last message is in Japanese. Answer in Japanese — even if " +
-                    "earlier messages here were in another language. Never switch language on your own."
-                else -> ""
-            }
-        }
-        // Na końcu promptu, bo tam modele słuchają najmocniej.
+        // ⚠️ Ten prompt MUSI być bajtowo stały między turami: DeepSeek cache'uje prefiks
+        // od pierwszego tokenu. Wszystko zmienne (czas, język) idzie do wiadomości
+        // użytkownika — inaczej cache pęka przy każdym obrocie języka.
         val tail = if (strictRole) "\n\n" + STRICT_ROLE_BLOCK else ""
-        return base + forced + tail
+        return base + tail
     }
 
     /**
@@ -410,6 +392,32 @@ first — one short beat, then your line — and stay in the place he set. Never
                 sb.appendLine()
             }
 
+            // Język: chip z czatu albo wykrycie z ostatniej wiadomości (z fallbackiem
+            // na poprzednią, gdy jest za krótka). Idzie do wiadomości użytkownika, nie
+            // do systemowej — system zostaje bajtowo stały i cache DeepSeeka żyje.
+            val detected = if (langOverride.isNotBlank()) "" else {
+                detectLang(question).ifBlank {
+                    history.asReversed()
+                        .firstOrNull { it.role == "user" && it.content.isNotBlank() }
+                        ?.let { detectLang(it.content) }
+                        .orEmpty()
+                }
+            }
+            val langLine = when (langOverride) {
+                "en" -> "[LANGUAGE] Answer in English. Always, in every reply, whatever he writes in."
+                "pl" -> "[LANGUAGE] Answer in Polish. Always, in every reply, whatever he writes in."
+                "ja" -> "[LANGUAGE] Answer in Japanese. Always, in every reply, whatever he writes in."
+                else -> when (detected) {
+                    "en" -> "[LANGUAGE] His last message is in English. Answer in English — even if " +
+                        "earlier messages here were in another language. Never switch language on your own."
+                    "pl" -> "[LANGUAGE] His last message is in Polish. Answer in Polish — even if " +
+                        "earlier messages here were in another language. Never switch language on your own."
+                    "ja" -> "[LANGUAGE] His last message is in Japanese. Answer in Japanese — even if " +
+                        "earlier messages here were in another language. Never switch language on your own."
+                    else -> ""
+                }
+            }
+
             // Kolejność ma znaczenie dla kosztu: zegar zmienia się co minutę, więc musi
             // iść na KOŃCU (razem z pytaniem). Inaczej unieważnia cache promptu, a właśnie
             // cache jest największą oszczędnością przy długich książkach.
@@ -435,6 +443,10 @@ first — one short beat, then your line — and stay in the place he set. Never
                     appendLine()
                     appendLine(timeContext(persona.builtin))
                     appendLine()
+                    if (langLine.isNotBlank()) {
+                        appendLine(langLine)
+                        appendLine()
+                    }
                     appendLine("Reader's question: $question")
                 }
             } else {
@@ -446,6 +458,10 @@ first — one short beat, then your line — and stay in the place he set. Never
                     appendWeb(this)
                     appendLine(timeContext(persona.builtin))
                     appendLine()
+                    if (langLine.isNotBlank()) {
+                        appendLine(langLine)
+                        appendLine()
+                    }
                     append(question)
                 }
             }
@@ -458,17 +474,6 @@ first — one short beat, then your line — and stay in the place he set. Never
                         reading = reading,
                         strictRole = strictRole,
                         builtinText = personaText,
-                        langOverride = langOverride,
-                        // Niepewne wykrycie ("ok", "haha") nie znaczy „nie wiadomo" — wtedy
-                        // zostajemy przy języku poprzedniej wiadomości z tej rozmowy.
-                        detectedLang = if (langOverride.isNotBlank()) "" else {
-                            detectLang(question).ifBlank {
-                                history.asReversed()
-                                    .firstOrNull { it.role == "user" && it.content.isNotBlank() }
-                                    ?.let { detectLang(it.content) }
-                                    .orEmpty()
-                            }
-                        },
                     ),
                 )
             )

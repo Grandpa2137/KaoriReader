@@ -1,0 +1,7 @@
+0.2.10
+
+- Cheaper long chats: the system prompt is now byte-identical on
+  every turn, so DeepSeek's prefix cache survives. The language
+  instruction (chip or detected) moved into your message, next to
+  the clock - both change, neither belongs in the cached prefix.
+- Nothing else changed.
