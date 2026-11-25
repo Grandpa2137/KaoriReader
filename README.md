@@ -1,6 +1,8 @@
 ﻿# KaoriReader
 
-![Android](https://github.com/Grandpa2137/KaoriReader/actions/workflows/android.yml/badge.svg)
+[![Download the latest APK](https://img.shields.io/github/v/release/Grandpa2137/KaoriReader?label=download%20APK&style=for-the-badge&color=6A54C8&logo=android&logoColor=white)](https://github.com/Grandpa2137/KaoriReader/releases/latest)
+
+[![Android](https://github.com/Grandpa2137/KaoriReader/actions/workflows/android.yml/badge.svg)](https://github.com/Grandpa2137/KaoriReader/actions/workflows/android.yml)
 
 An Android EPUB reader with a companion who reads **with** you — and who is not allowed
 to spoil the book.
@@ -123,8 +125,9 @@ your phone.
 
 ## Install (no PC, no cable)
 
-1. On your phone, open the **[latest release](https://github.com/Grandpa2137/KaoriReader/releases/latest)**.
-2. Download the latest `KaoriReader-<version>.apk`.
+1. On your phone, open the **[latest release](https://github.com/Grandpa2137/KaoriReader/releases/latest)**
+   — that link always points at the newest build, so it cannot go stale.
+2. Download the `KaoriReader-<version>.apk` file attached to it.
 3. Tap the downloaded file. Android will ask once to allow installs from this source —
    allow it for the browser you used, then tap **Install**.
 4. The app is now on your home screen. No account, no sign-in, no cable.
