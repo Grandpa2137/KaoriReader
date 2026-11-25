@@ -95,6 +95,27 @@ object ReadRanges {
         return sb.toString()
     }
 
+    /**
+     * Ilustracje z PRZECZYTANEJ części książki — ta sama reguła co przy tekście.
+     *
+     * Wcześniej liczyło się „wszystko do bieżącego rozdziału", więc po skoku na rozdział 5
+     * obrazki z nieprzeczytanych 2–4 (i z dalszej części bieżącego) trafiały do modelu.
+     * Obrazek leży w tekście pod swoim offsetem, więc wystarczy sprawdzić ten znak.
+     */
+    fun imagesIn(book: Book, ranges: List<IntRange>, max: Int = 2): List<String> {
+        if (book.chapters.isEmpty() || ranges.isEmpty()) return emptyList()
+        val out = ArrayList<String>()
+        var base = 0
+        for (ch in book.chapters) {
+            ch.images.sortedBy { it.offset }.forEach { img ->
+                val at = base + img.offset
+                if (ranges.any { at in it }) out += img.path
+            }
+            base += ch.text.length
+        }
+        return if (max > 0) out.takeLast(max) else out
+    }
+
     /** Offsety pierwszego znaku każdego rozdziału — do przeliczania pozycji. */
     fun chapterStarts(book: Book): IntArray {
         val out = IntArray(book.chapters.size + 1)

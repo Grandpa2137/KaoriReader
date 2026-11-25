@@ -53,6 +53,29 @@ object Endpoints {
     }
 
     /**
+     * Czy wolno pobrać stronę z wklejonego linku. Tu jest ostrzej niż przy API:
+     * tylko `https`, i nigdy adres prywatny — inaczej wklejony `http://192.168.1.1/…`
+     * pozwoliłby jej czytać router albo NAS w domu.
+     */
+    fun checkFetch(url: String): Verdict {
+        val raw = url.trim()
+        if (raw.isEmpty()) return Verdict(false, false, "the link is empty")
+        val uri = runCatching { URI(raw) }.getOrNull()
+            ?: return Verdict(false, false, "that is not a valid link")
+        val scheme = uri.scheme?.lowercase()
+            ?: return Verdict(false, false, "the link has no https:// prefix")
+        val host = uri.host.orEmpty()
+        if (host.isBlank()) return Verdict(false, false, "that is not a valid link")
+        if (scheme != "https") {
+            return Verdict(false, false, "only https:// links can be opened — that one is $scheme")
+        }
+        if (isLocalHost(host)) {
+            return Verdict(false, false, "links to your own network are not fetched")
+        }
+        return Verdict(true, false)
+    }
+
+    /**
      * Czy host jest w sieci lokalnej: `localhost`, `*.local`, pętla zwrotna,
      * `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, link-local `169.254.0.0/16`.
      */

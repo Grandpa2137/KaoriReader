@@ -401,10 +401,11 @@ markdown, no summaries of what you are about to say. Just talk.
                 sb.appendLine()
             }
 
+            // Kolejność ma znaczenie dla kosztu: zegar zmienia się co minutę, więc musi
+            // iść na KOŃCU (razem z pytaniem). Inaczej unieważnia cache promptu, a właśnie
+            // cache jest największą oszczędnością przy długich książkach.
             val userMessage = if (reading) {
                 buildString {
-                    appendLine(timeContext(persona.builtin))
-                    appendLine()
                     if (memories.isNotEmpty()) {
                         appendLine(memoryBlock(memories))
                         appendLine()
@@ -423,17 +424,19 @@ markdown, no summaries of what you are about to say. Just talk.
                     appendLine()
                     appendLine(buildContext(visibleText, question))
                     appendLine()
+                    appendLine(timeContext(persona.builtin))
+                    appendLine()
                     appendLine("Reader's question: $question")
                 }
             } else {
                 buildString {
-                    appendLine(timeContext(persona.builtin))
-                    appendLine()
                     if (memories.isNotEmpty()) {
                         appendLine(memoryBlock(memories))
                         appendLine()
                     }
                     appendWeb(this)
+                    appendLine(timeContext(persona.builtin))
+                    appendLine()
                     append(question)
                 }
             }
@@ -447,7 +450,16 @@ markdown, no summaries of what you are about to say. Just talk.
                         strictRole = strictRole,
                         builtinText = personaText,
                         langOverride = langOverride,
-                        detectedLang = if (langOverride.isBlank()) detectLang(question) else "",
+                        // Niepewne wykrycie ("ok", "haha") nie znaczy „nie wiadomo" — wtedy
+                        // zostajemy przy języku poprzedniej wiadomości z tej rozmowy.
+                        detectedLang = if (langOverride.isNotBlank()) "" else {
+                            detectLang(question).ifBlank {
+                                history.asReversed()
+                                    .firstOrNull { it.role == "user" && it.content.isNotBlank() }
+                                    ?.let { detectLang(it.content) }
+                                    .orEmpty()
+                            }
+                        },
                     ),
                 )
             )
@@ -887,11 +899,13 @@ markdown, no summaries of what you are about to say. Just talk.
         }
 
         return """
-[WHEN — read this carefully, the two clocks are different]
-YOUR time, in Hadano: ${fmt(jst)} JST. This is the time YOU live in. If they ask what time it
-is for you, or how your night is going, you answer with THIS one.
-Their phone: ${fmt(localTz)} (${localTz.id}) — they are $shift.
-Never hand your own clock to them as if it were theirs.
+[WHEN — two different clocks, read carefully]
+YOUR clock, in Hadano (Japan): ${fmt(jst)} JST — this is the time you live in.
+THEIR clock, their phone (${localTz.id}): ${fmt(localTz)} — they are $shift.
+If they ask what time it is where they are, or just "what time is it", use THEIR clock.
+If they ask how your night is going, or what time it is for you, use YOURS.
+Never hand your own clock to them as if it were theirs, and never state a time that is not one
+of the two above.
 
 [CLOCK ARITHMETIC — you do not do this in your head]
 It is $hour:$minute here, which is $minutesToday minutes after midnight; that is $sinceMidnight
@@ -1096,6 +1110,9 @@ record does, not a person.
      */
     suspend fun fetchPage(url: String): String = withContext(Dispatchers.IO) {
         val target = url.trim().trimEnd('.', ',', ')', ']', '>', '"')
+        // Wklejony link: tylko https i nigdy twoja sieć lokalna.
+        val allowed = Endpoints.checkFetch(target)
+        if (!allowed.ok) return@withContext ""
         runCatching {
             val conn = (URL(target).openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"

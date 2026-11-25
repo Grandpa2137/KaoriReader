@@ -58,7 +58,9 @@ your phone.
   it — it lands in the editor as plain text, not as a locked black box
 - **she can look things up** — paste a URL into the chat and she fetches and reads that page
   (plain HTML, or data hidden in the page's JSON), so you can ask about an article without
-  copying it by hand
+  copying it by hand. Only `https://` links are fetched, and never an address from your own
+  network — a pasted `http://192.168.1.1/…` is refused, so she cannot be used to read your
+  router or NAS
 - **she can see pictures** — attach a photo to a message, and book illustrations from the part
   you have already read are sent along with the text, so she comments on the image itself
 - **translate the page or the whole chapter** — the 文 button in the reader sends what you are
@@ -179,7 +181,9 @@ The app never asks the model to "please not spoil". It simply does not send the 
 1. Every page you actually dwell on (≥2 s) is recorded as a character range.
    Jumping with the table of contents or search marks nothing.
 2. Those ranges are merged into a per-book set of read ranges.
-3. When you write to the companion, she gets only the text from those ranges.
+3. When you write to the companion, she gets only the text from those ranges — **and only the
+   illustrations that sit inside them**. An image from a chapter you skipped, or from a page
+   below your current position, is never attached.
 4. Memories never store plot — only durable facts about you — so a summary of chapter 30
    cannot leak at chapter 2.
 

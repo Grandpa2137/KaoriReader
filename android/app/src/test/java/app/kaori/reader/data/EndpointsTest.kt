@@ -80,4 +80,30 @@ class EndpointsTest {
         assertFalse(Endpoints.isLocalHost("10.0.0"))   // brakuje oktetu
         assertFalse(Endpoints.isLocalHost("192.168.0.a"))
     }
+
+    @Test
+    fun `fetched links must be https and outside the LAN`() {
+        assertTrue(Endpoints.checkFetch("https://en.wikipedia.org/wiki/Light_novel").ok)
+        assertTrue(Endpoints.checkFetch("https://example.com/article").ok)
+
+        // http nigdy — nawet do własnej sieci: inaczej wklejony link czyta router/NAS
+        listOf(
+            "http://example.com",
+            "http://192.168.1.1/admin",
+            "http://localhost:8080",
+        ).forEach {
+            val v = Endpoints.checkFetch(it)
+            assertFalse("$it nie może być pobierany", v.ok)
+            assertTrue(!v.problem.isNullOrBlank())
+        }
+
+        // https do adresu prywatnego też nie — to nadal skanowanie domu
+        listOf(
+            "https://192.168.1.1",
+            "https://10.0.0.5:8443",
+            "https://nas.local",
+        ).forEach {
+            assertFalse("$it nie może być pobierany", Endpoints.checkFetch(it).ok)
+        }
+    }
 }

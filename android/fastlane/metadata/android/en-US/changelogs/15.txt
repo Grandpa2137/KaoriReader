@@ -1,0 +1,11 @@
+0.2.5
+
+- Illustrations now follow the read ranges like the text does: an
+  image from a skipped chapter or from a page below you is never
+  sent.
+- Pasted links are fetched over https only, never from your own
+  network, so she cannot read your router or NAS.
+- Clock moved to the end of the prompt: the long book text stays
+  cacheable, so chats cost less.
+- A short "ok" no longer resets her language: when it is unclear she
+  keeps the language of your previous message.
