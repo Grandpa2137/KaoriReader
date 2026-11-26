@@ -1868,9 +1868,9 @@ fun SettingsScreen(
                 Text(
                     when (historyChars) {
                         16_000 -> "last ~50 messages - the default, cheapest"
-                        48_000 -> "~150 messages - longer memory, ~3x bigger requests"
-                        96_000 -> "~300 messages - a long conversation without losing the thread"
-                        else -> "maximum - longest memory, most expensive; DeepSeek's window is 64k tokens, so on a very long chat the app shortens the history itself"
+                        64_000 -> "~200 messages - longer memory, still cheap with caching"
+                        160_000 -> "~500 messages - a long conversation without losing the thread"
+                        else -> "maximum - the whole conversation; DeepSeek's window is 1M tokens, so this is ~15% of it"
                     },
                     color = p.textDim,
                     fontSize = 10.sp,
@@ -1878,7 +1878,7 @@ fun SettingsScreen(
                 )
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(16_000 to "16k", 48_000 to "48k", 96_000 to "96k", 160_000 to "160k").forEach { (v, label) ->
+                    listOf(16_000 to "16k", 64_000 to "64k", 160_000 to "160k", 500_000 to "500k").forEach { (v, label) ->
                         ModeChip(label, historyChars == v, p) { onHistoryChars(v) }
                     }
                 }

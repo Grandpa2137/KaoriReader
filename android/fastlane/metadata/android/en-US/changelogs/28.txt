@@ -1,0 +1,7 @@
+0.2.18
+
+- "Chat memory" got bigger steps: 16k / 64k / 160k / 500k characters.
+  DeepSeek's current window is 1M tokens, so 500k characters is still
+  only about 15% of it - and with prefix caching most of it is billed
+  at the cache-hit rate.
+- The note under the setting no longer claims a 64k window.
