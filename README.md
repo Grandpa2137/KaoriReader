@@ -217,7 +217,7 @@ cd android
 ./gradlew testReleaseUnitTest
 ```
 
-The suite (109 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
+The suite (115 tests) covers the parts that must not break: `ReadRanges` (the spoiler guard —
 ranges, merging, gaps, the 400-range cap and `textOf`), `TextChunks` (token estimate and
 chapter splitting, so a long chapter is never cut in half), `Endpoints` (https everywhere,
 plain http only on private hosts — including the ranges just outside the private blocks),

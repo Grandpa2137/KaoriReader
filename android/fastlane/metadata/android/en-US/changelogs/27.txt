@@ -1,0 +1,7 @@
+0.2.17
+
+- "Chat memory" no longer has a hard edge: messages that fall out of the
+  window are now carried along as a compressed recap, so she still knows
+  what you told her earlier in the same conversation.
+- Requests stay about the same size - the recap is capped and replaces
+  the oldest messages instead of adding to them.

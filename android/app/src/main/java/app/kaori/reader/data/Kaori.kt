@@ -504,10 +504,22 @@ first — one short beat, then your line — and stay in the place he set. Never
                         ),
                     )
                 )
-                windowOf(history, budget).forEach { m ->
-                    // znacznik tylko przy jego wiadomościach — inaczej model kopiuje format do odpowiedzi
-                    val stamp = if (m.role == "user" && m.ts > 0) "(sent ${shortAgo(m.ts)}) " else ""
-                    messages.put(JSONObject().put("role", m.role).put("content", stamp + m.content))
+                windowOf(history, budget).let { kept ->
+                    val digest = digestOf(history.subList(0, history.size - kept.size))
+                    if (digest.isNotBlank()) {
+                        messages.put(
+                            JSONObject().put("role", "system").put(
+                                "content",
+                                "[EARLIER IN THIS CONVERSATION - dropped from the window, compressed]\n" + digest +
+                                    "\nTreat this as memory, not as something to quote back."
+                            )
+                        )
+                    }
+                    kept.forEach { m ->
+                        // znacznik tylko przy jego wiadomościach — inaczej model kopiuje format do odpowiedzi
+                        val stamp = if (m.role == "user" && m.ts > 0) "(sent ${shortAgo(m.ts)}) " else ""
+                        messages.put(JSONObject().put("role", m.role).put("content", stamp + m.content))
+                    }
                 }
                 messages.put(JSONObject().put("role", "user").put("content", userContent(userMessage, imageBase64, bookImages)))
 
@@ -830,6 +842,25 @@ first — one short beat, then your line — and stay in the place he set. Never
      * pięć wymian — po kilkunastu linijkach Kaori nie wiedziała już, że jest w pracy.
      * Budżet 16 tys. znaków to ~50 typowych wiadomości i wciąż śmiesznie tanio.
      */
+    /**
+     * Skrót tego, co wypadło z okna. Starsze wiadomości nie jadą w całości, ale nie muszą
+     * znikać bez śladu — bez tego rozmowa o pracy sprzed trzydziestu wiadomości wyparowuje
+     * i Kaori pyta drugi raz o to samo.
+     */
+    internal fun digestOf(dropped: List<ChatMessage>, budget: Int = DIGEST_CHARS): String {
+        if (dropped.isEmpty()) return ""
+        val lines = ArrayList<String>()
+        var used = 0
+        for (m in dropped.asReversed()) {
+            val who = if (m.role == "user") "HE" else "KAORI"
+            val line = "$who: " + m.content.replace(Regex("\\s+"), " ").trim().take(DIGEST_LINE_CHARS)
+            if (used + line.length > budget) break
+            used += line.length + 1
+            lines.add(line)
+        }
+        return lines.asReversed().joinToString("\n")
+    }
+
     internal fun windowOf(history: List<ChatMessage>, budgetChars: Int = HISTORY_CHARS): List<ChatMessage> {
         if (history.isEmpty()) return emptyList()
         var budget = budgetChars
@@ -1207,6 +1238,9 @@ record does, not a person.
     private const val HISTORY_MIN = 8
     /** Poniżej tego nie ma sensu schodzić przy ponownej próbie — to ~10 wiadomości. */
     private const val MIN_HISTORY_CHARS = 4_000
+    /** Ile znaków skrótu starszej rozmowy dokładamy, gdy wypadła z okna. */
+    private const val DIGEST_CHARS = 4_000
+    private const val DIGEST_LINE_CHARS = 300
     private const val MAX_REDIRECTS = 5
 
     /**
