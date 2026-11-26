@@ -1,0 +1,6 @@
+0.2.19
+
+- The DeepSeek preset now fills in the model name DeepSeek documents
+  today (`deepseek-flash`) instead of the old `deepseek-chat` alias.
+- Existing settings are untouched - if you already have a model name you
+  like, it stays exactly as it is.

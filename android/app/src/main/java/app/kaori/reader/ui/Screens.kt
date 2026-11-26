@@ -1764,7 +1764,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 listOf(
-                    Triple("DeepSeek", "https://api.deepseek.com", "deepseek-chat"),
+                    Triple("DeepSeek", "https://api.deepseek.com", "deepseek-flash"),
                     Triple("OpenAI", "https://api.openai.com/v1", "gpt-4o-mini"),
                     Triple("OpenRouter", "https://openrouter.ai/api/v1", "openai/gpt-4o-mini"),
                 ).forEach { (label, url, m) ->
