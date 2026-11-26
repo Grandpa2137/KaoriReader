@@ -24,6 +24,12 @@ data class ChatMessage(
  * Gdzie i czym rozmawiamy — dzięki temu działa dowolny dostawca zgodny z OpenAI
  * (OpenAI, OpenRouter, DeepSeek, Groq, własny serwer).
  */
+/**
+ * Jak dostawca nazywa włączanie rozumowania. `None` znaczy „nie ma czego wysłać” —
+ * wtedy przełącznik w Ustawieniach jest ukryty, zamiast obiecywać martwą opcję.
+ */
+enum class ReasoningStyle { DeepSeek, OpenRouter, None }
+
 data class LlmConfig(
     val baseUrl: String = "https://api.deepseek.com",
     val model: String = "deepseek-flash",
@@ -31,11 +37,23 @@ data class LlmConfig(
     val thinking: Boolean = true,
 ) {
     /**
-     * Czy dostawca umie włączyć rozumowanie. Dziś tylko DeepSeek ma na to pole —
-     * dlatego przełącznik w Ustawieniach pokazujemy wyłącznie wtedy, gdy ma sens.
+     * Jak ten dostawca nazywa włączanie rozumowania. DeepSeek ma `thinking`, OpenRouter ma
+     * `reasoning` — a reszta nie ma nic, więc nie ma czego wysyłać ani czym przełączać.
+     */
+    val reasoningStyle: ReasoningStyle
+        get() = when {
+            baseUrl.contains("deepseek", ignoreCase = true) -> ReasoningStyle.DeepSeek
+            baseUrl.contains("openrouter", ignoreCase = true) -> ReasoningStyle.OpenRouter
+            else -> ReasoningStyle.None
+        }
+
+    /**
+     * Czy dostawca umie włączyć rozumowanie — decyduje o tym, czy przełącznik w ogóle się pokaże.
+     * OpenAI, Groq i własne serwery nie mają tego pola, więc nie obiecujemy przełącznika,
+     * który nic nie robi.
      */
     val supportsThinking: Boolean
-        get() = baseUrl.contains("deepseek", ignoreCase = true)
+        get() = reasoningStyle != ReasoningStyle.None
 
     /** Użytkownik może podać bazę albo cały URL — oba warianty mają działać. */
     val endpoint: String
@@ -586,11 +604,17 @@ first — one short beat, then your line — and stay in the place he set. Never
         else -> "Connected · $model"
     }
 
-    private fun JSONObject.withThinking(config: LlmConfig, allowReasoning: Boolean = false): JSONObject {
-        if (config.supportsThinking) {
-            // Przełącznik w Ustawieniach może wyłączyć myślenie nawet tam, gdzie jest dostępne.
-            val on = allowReasoning && config.thinking
-            put("thinking", JSONObject().put("type", if (on) "enabled" else "disabled"))
+    internal fun JSONObject.withThinking(config: LlmConfig, allowReasoning: Boolean = false): JSONObject {
+        // Przełącznik w Ustawieniach może wyłączyć myślenie nawet tam, gdzie jest dostępne.
+        val on = allowReasoning && config.thinking
+        when (config.reasoningStyle) {
+            ReasoningStyle.DeepSeek ->
+                put("thinking", JSONObject().put("type", if (on) "enabled" else "disabled"))
+            // OpenRouter zbiera pod jednym polem modele różnych firm — `enabled` wystarcza,
+            // a wyłączenie nie psuje modeli, które i tak nie myślą.
+            ReasoningStyle.OpenRouter ->
+                put("reasoning", JSONObject().put("enabled", on))
+            ReasoningStyle.None -> Unit
         }
         return this
     }

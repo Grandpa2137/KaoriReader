@@ -1830,8 +1830,9 @@ fun SettingsScreen(
                 }
             }
 
-            // Przełącznik pokazujemy tylko tam, gdzie da się go użyć — na OpenAI i reszcie
-            // nie ma czego przełączać i nie chcemy obiecywać funkcji, której nie ma.
+            // Przełącznik pokazujemy tylko tam, gdzie da się go użyć — DeepSeek ma `thinking`,
+            // OpenRouter `reasoning`, a OpenAI czy własny serwer nie mają nic, więc nie obiecujemy
+            // opcji, która nic nie robi.
             if (app.kaori.reader.data.LlmConfig(baseUrl = baseUrl).supportsThinking) {
                 Spacer(Modifier.height(12.dp))
                 Row(

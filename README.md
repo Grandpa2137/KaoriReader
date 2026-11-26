@@ -54,11 +54,11 @@ text. Nothing sped up — that is her typing, on a real phone.*
   `172.16–31.x`, `*.local`), which is everything a local LM Studio / Ollama / LocalAI needs.
   Anything outside your LAN must be `https`, and the app refuses plain http to the internet
   before a single byte leaves the phone
-- **she thinks before she answers** — on DeepSeek the request runs with the model's own
-  reasoning enabled (chat only; translation and memory stay cheap). It is a **setting you can
-  switch off** — the toggle only appears when your provider actually supports it, so nobody is
-  promised a switch that does nothing. The clock is also given to her as ready-made numbers, so
-  she stops inventing "17 minutes ago"
+- **she thinks before she answers** — on DeepSeek (`thinking`) and on OpenRouter (`reasoning`), chat
+  only; translation and memory stay cheap. It is a **setting you can switch off** — and the
+  toggle only appears on providers that actually have such a field, so nobody is promised a
+  switch that does nothing. The clock is also given to her as ready-made numbers, so she stops
+  inventing "17 minutes ago"
 - she sees the book you are reading, reacts to it, argues about characters
 - **spoiler guard** — she only receives the text you have actually read. Skipped pages are
   not in her context at all, so she cannot leak them, even if the model has seen the book

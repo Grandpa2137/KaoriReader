@@ -1,0 +1,6 @@
+0.2.15
+
+- "Think before answering" now also works on OpenRouter, not only on
+  DeepSeek - each provider gets the field it actually understands.
+- The switch explains what it really buys: steadier roleplay, less
+  invented detail, but slower and a little pricier.
