@@ -1,0 +1,6 @@
+0.2.20
+
+- The note under "Chat memory" no longer mentions DeepSeek unless you
+  are actually on DeepSeek. Everyone else gets a neutral line about
+  models differing, plus the note that an oversized request is retried
+  with half the history.

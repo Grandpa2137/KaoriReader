@@ -1868,13 +1868,27 @@ fun SettingsScreen(
                 Text(
                     when (historyChars) {
                         16_000 -> "last ~50 messages - the default, cheapest"
-                        64_000 -> "~200 messages - longer memory, still cheap with caching"
+                        64_000 -> "~200 messages - longer memory, still cheap with prefix caching"
                         160_000 -> "~500 messages - a long conversation without losing the thread"
-                        else -> "maximum - the whole conversation; DeepSeek's window is 1M tokens, so this is ~15% of it"
+                        else -> "the whole conversation - the longest memory, the biggest request"
                     },
                     color = p.textDim,
                     fontSize = 10.sp,
                     lineHeight = 14.sp,
+                )
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    // Okno kontekstu zależy od dostawcy, więc nie wmawiamy każdemu DeepSeeka.
+                    if (app.kaori.reader.data.LlmConfig(baseUrl = baseUrl).reasoningStyle ==
+                        app.kaori.reader.data.ReasoningStyle.DeepSeek
+                    ) {
+                        "DeepSeek's window is 1M tokens, so even 500k characters is about 15% of it."
+                    } else {
+                        "Models differ: some take a few thousand tokens, some a million. If a request does not fit, the app retries with half the history."
+                    },
+                    color = p.textDim,
+                    fontSize = 9.sp,
+                    lineHeight = 13.sp,
                 )
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
