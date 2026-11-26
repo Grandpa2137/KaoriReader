@@ -699,6 +699,7 @@ private fun KaoriApp() {
                                 config = llm,
                                 persona = persona,
                                 strictRole = settings.strictRole,
+                                historyChars = settings.historyChars,
                                 onOpenSettings = { tab = 3 },
                             )
                             2 -> StatsScreen()
@@ -761,6 +762,8 @@ private fun KaoriApp() {
                                 },
                                 thinking = settings.thinking,
                                 onThinking = { scope.launch { store.setThinking(it) } },
+                                historyChars = settings.historyChars,
+                                onHistoryChars = { scope.launch { store.setHistoryChars(it) } },
                             )
                         }
                     }

@@ -1500,6 +1500,8 @@ fun SettingsScreen(
     onModelConfig: (String, String) -> Unit,
     thinking: Boolean = true,
     onThinking: (Boolean) -> Unit = {},
+    historyChars: Int = 16_000,
+    onHistoryChars: (Int) -> Unit = {},
     translationInfo: String = "",
     onClearTranslations: () -> Unit = {},
 ) {
@@ -1855,6 +1857,30 @@ fun SettingsScreen(
                     ModeChip("On", thinking, p) { onThinking(true) }
                     Spacer(Modifier.width(6.dp))
                     ModeChip("Off", !thinking, p) { onThinking(false) }
+                }
+            }
+
+            // How much of the conversation is sent. More = she forgets less,
+            // but every question is bigger and costs more.
+            Spacer(Modifier.height(12.dp))
+            Column {
+                Text("Chat memory", color = p.text, fontSize = 12.sp)
+                Text(
+                    when (historyChars) {
+                        16_000 -> "last ~50 messages - the default, cheapest"
+                        48_000 -> "~150 messages - longer memory, ~3x bigger requests"
+                        96_000 -> "~300 messages - a long conversation without losing the thread"
+                        else -> "maximum - longest memory, most expensive; DeepSeek's window is 64k tokens, so on a very long chat the app shortens the history itself"
+                    },
+                    color = p.textDim,
+                    fontSize = 10.sp,
+                    lineHeight = 14.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(16_000 to "16k", 48_000 to "48k", 96_000 to "96k", 160_000 to "160k").forEach { (v, label) ->
+                        ModeChip(label, historyChars == v, p) { onHistoryChars(v) }
+                    }
                 }
             }
 

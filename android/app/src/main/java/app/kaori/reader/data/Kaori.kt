@@ -386,6 +386,8 @@ first — one short beat, then your line — and stay in the place he set. Never
         strictRole: Boolean = true,
         /** Treść persony wbudowanej z assets/persona/kaori.md (pusta = bloki w kodzie). */
         personaText: String = "",
+        /** Ile znaków historii rozmowy wolno wysłać (ustawienie z Ustawień). */
+        historyChars: Int = HISTORY_CHARS,
         /** Wymuszenie języka odpowiedzi z czatu („”, „en”, „pl”, „ja”). */
         langOverride: String = "",
         imageBase64: String? = null,
@@ -483,37 +485,47 @@ first — one short beat, then your line — and stay in the place he set. Never
                     append(question)
                 }
             }
-            val messages = JSONArray()
-            messages.put(
-                JSONObject().put("role", "system").put(
-                    "content",
-                    systemFor(
-                        persona = persona,
-                        reading = reading,
-                        strictRole = strictRole,
-                        builtinText = personaText,
-                    ),
+            // Budżet historii bywa większy niż okno modelu — wtedy dostawca odbija żądanie.
+            // Zamiast pokazać błąd, próbujemy jeszcze raz z połową historii: lepiej stracić
+            // kilka starych wiadomości niż całą odpowiedź.
+            var budget = historyChars
+            var raw = ""
+            var attempts = 0
+            while (true) {
+                val messages = JSONArray()
+                messages.put(
+                    JSONObject().put("role", "system").put(
+                        "content",
+                        systemFor(
+                            persona = persona,
+                            reading = reading,
+                            strictRole = strictRole,
+                            builtinText = personaText,
+                        ),
+                    )
                 )
-            )
-            windowOf(history).forEach { m ->
-                // znacznik tylko przy jego wiadomościach — inaczej model kopiuje format do odpowiedzi
-                val stamp = if (m.role == "user" && m.ts > 0) "(sent ${shortAgo(m.ts)}) " else ""
-                messages.put(JSONObject().put("role", m.role).put("content", stamp + m.content))
+                windowOf(history, budget).forEach { m ->
+                    // znacznik tylko przy jego wiadomościach — inaczej model kopiuje format do odpowiedzi
+                    val stamp = if (m.role == "user" && m.ts > 0) "(sent ${shortAgo(m.ts)}) " else ""
+                    messages.put(JSONObject().put("role", m.role).put("content", stamp + m.content))
+                }
+                messages.put(JSONObject().put("role", "user").put("content", userContent(userMessage, imageBase64, bookImages)))
+
+                val body = JSONObject()
+                    .put("model", config.model)
+                    .put("messages", messages)
+                    .put("temperature", if (strictRole) 1.1 else 1.0)
+                    .put("top_p", if (strictRole) 0.95 else 1.0)
+                    .put("max_tokens", 700)
+                    // Tu model ma się zastanowić, zanim odpowie: stąd biorą się zmyślone
+                    // godziny i „od 17 minut”, których nikt nie policzył.
+                    .withThinking(config, allowReasoning = true)
+
+                raw = post(config, apiKey, body.toString())
+                if (!isContextOverflow(raw) || budget <= MIN_HISTORY_CHARS || attempts >= 2) break
+                budget = maxOf(budget / 2, MIN_HISTORY_CHARS)
+                attempts++
             }
-            messages.put(JSONObject().put("role", "user").put("content", userContent(userMessage, imageBase64, bookImages)))
-
-            val body = JSONObject()
-                .put("model", config.model)
-                .put("messages", messages)
-                .put("temperature", if (strictRole) 1.1 else 1.0)
-                .put("top_p", if (strictRole) 0.95 else 1.0)
-                .put("max_tokens", 700)
-                // Tu model ma się zastanowić, zanim odpowie: stąd biorą się zmyślone
-                // godziny i „od 17 minut”, których nikt nie policzył. Przełącznik
-                // w Ustawieniach może to wyłączyć (taniej, ale więcej zgadywania).
-                .withThinking(config, allowReasoning = true)
-
-            val raw = post(config, apiKey, body.toString())
             // Gdyby odbiła znacznik czasu na początku — wycinamy TYLKO formę "(sent ...)"
             // albo "[hh:mm]". Samotna godzina zostaje, żeby nie zjeść całej odpowiedzi.
             val cleaned = raw
@@ -818,9 +830,9 @@ first — one short beat, then your line — and stay in the place he set. Never
      * pięć wymian — po kilkunastu linijkach Kaori nie wiedziała już, że jest w pracy.
      * Budżet 16 tys. znaków to ~50 typowych wiadomości i wciąż śmiesznie tanio.
      */
-    private fun windowOf(history: List<ChatMessage>): List<ChatMessage> {
+    internal fun windowOf(history: List<ChatMessage>, budgetChars: Int = HISTORY_CHARS): List<ChatMessage> {
         if (history.isEmpty()) return emptyList()
-        var budget = HISTORY_CHARS
+        var budget = budgetChars
         val out = ArrayDeque<ChatMessage>()
         for (m in history.asReversed()) {
             val cost = m.content.length + 40
@@ -829,6 +841,18 @@ first — one short beat, then your line — and stay in the place he set. Never
             out.addFirst(m)
         }
         return out.toList()
+    }
+
+    /**
+     * Czy dostawca odrzucił żądanie, bo historia nie mieści się w oknie modelu.
+     * Każdy pisze to inaczej, więc patrzymy na kilka typowych zwrotów.
+     */
+    internal fun isContextOverflow(raw: String): Boolean {
+        if (!raw.startsWith("API error")) return false
+        val t = raw.lowercase()
+        return t.contains("context length") || t.contains("maximum context") ||
+            t.contains("context_length_exceeded") || t.contains("too long") ||
+            t.contains("reduce the length") || t.contains("too many tokens")
     }
 
     /** Wspomnienia z pamięci lokalnej — fakty, wątki i streszczenia rozmów. */
@@ -1181,6 +1205,8 @@ record does, not a person.
     private const val MAX_PAGE_CHARS = 2_000_000
     private const val HISTORY_CHARS = 16_000
     private const val HISTORY_MIN = 8
+    /** Poniżej tego nie ma sensu schodzić przy ponownej próbie — to ~10 wiadomości. */
+    private const val MIN_HISTORY_CHARS = 4_000
     private const val MAX_REDIRECTS = 5
 
     /**

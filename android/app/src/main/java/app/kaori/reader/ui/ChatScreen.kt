@@ -74,6 +74,7 @@ fun ChatScreen(
     config: app.kaori.reader.data.LlmConfig = app.kaori.reader.data.LlmConfig(),
     persona: app.kaori.reader.data.Persona = app.kaori.reader.data.PersonaStore.KAORI,
     strictRole: Boolean = true,
+    historyChars: Int = 16_000,
     onOpenSettings: () -> Unit,
 ) {
     val p = LocalPalette.current
@@ -130,6 +131,7 @@ fun ChatScreen(
                 persona = persona,
                 strictRole = strictRole,
                 personaText = personaText,
+                historyChars = historyChars,
                 langOverride = langOverride,
                 bookTitle = bookTitle,
                 visibleText = visibleText(),

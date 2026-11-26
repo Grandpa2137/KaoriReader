@@ -1,0 +1,9 @@
+0.2.16
+
+- Settings -> MODEL: "Chat memory" lets you pick how much of the
+  conversation is sent (16k / 48k / 96k / 160k characters). Default
+  stays at 16k; more means she forgets less and every request is
+  bigger.
+- If a provider refuses a request because the history does not fit in
+  the model's context, the app retries with half of it instead of
+  showing an error.

@@ -30,6 +30,11 @@ data class AppSettings(
     val thinking: Boolean = true,
     /** Czy pokazaliśmy już ekran „skąd wziąć klucz" — raz na instalację. */
     val welcomeSeen: Boolean = false,
+    /**
+     * Ile znaków historii rozmowy wolno wysłać. Więcej = mniej zapominania, ale większe
+     * żądanie i ryzyko przekroczenia okna modelu (dlatego silnik umie się cofnąć).
+     */
+    val historyChars: Int = 16_000,
 )
 
 /**
@@ -57,6 +62,7 @@ class SettingsStore(private val context: Context) {
         val strict = androidx.datastore.preferences.core.booleanPreferencesKey("strict_role")
         val thinking = androidx.datastore.preferences.core.booleanPreferencesKey("llm_thinking")
         val welcome = androidx.datastore.preferences.core.booleanPreferencesKey("welcome_seen")
+        val historyChars = androidx.datastore.preferences.core.intPreferencesKey("history_chars")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -72,6 +78,7 @@ class SettingsStore(private val context: Context) {
             strictRole = p[Keys.strict] ?: true,
             thinking = p[Keys.thinking] ?: true,
             welcomeSeen = p[Keys.welcome] ?: false,
+            historyChars = p[Keys.historyChars] ?: 16_000,
         )
     }
 
@@ -96,6 +103,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setStrictRole(v: Boolean) = put { it[Keys.strict] = v }
     suspend fun setThinking(v: Boolean) = put { it[Keys.thinking] = v }
     suspend fun setWelcomeSeen(v: Boolean) = put { it[Keys.welcome] = v }
+    suspend fun setHistoryChars(v: Int) = put { it[Keys.historyChars] = v }
 
     private suspend fun put(block: (MutablePreferences) -> Unit) {
         context.dataStore.edit(block)
